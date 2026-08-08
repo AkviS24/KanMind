@@ -2,8 +2,12 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
+from django.shortcuts import get_object_or_404
+from rest_framework.permissions import IsAuthenticated
 
-from .serializers import RegistrationSerializer, LoginSerializer
+
+from ..models import User
+from .serializers import RegistrationSerializer, LoginSerializer, EmailCheckSerializer
 
 
 class RegistrationView(APIView):
@@ -52,4 +56,32 @@ class LoginView(APIView):
         return Response(
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
+
+class EmailCheckView(APIView):
+    permission_classes=[IsAuthenticated]
+
+    def get(self, request):
+        serializer=EmailCheckSerializer(data=request.query_params)
+
+        if not serializer.is_valid():
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user=get_object_or_404(
+            User,
+            email=serializer.validated_data['email'],
+        )
+
+        return Response(
+            {
+                'id': user.id,
+                'email': user.email,
+                'fullname': user.fullname,
+            },
+            status=status.HTTP_200_OK,
         )
