@@ -104,6 +104,7 @@ class TaskCreateSerializerTest(TestCase):
             priority='medium',
             assignee=self.member,
             reviewer=self.member,
+            creator=self.owner,
         )
 
         outsider=User.objects.create_user(
@@ -135,6 +136,7 @@ class TaskCreateSerializerTest(TestCase):
             priority='medium',
             assignee=self.member,
             reviewer=self.member,
+            creator=self.owner,
         )
 
         outsider=User.objects.create_user(

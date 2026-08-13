@@ -10,7 +10,7 @@ from .serializers import (
     TaskUpdateSerializer, 
     CommentSerializer,
 )
-from .permissions import IsBoardMember
+from .permissions import IsBoardMember, IsTaskCreatorOrBoardOwner
 
 
 class AssignedTasksView(APIView):
@@ -44,7 +44,7 @@ class TaskListView(APIView):
         serializer = TaskCreateSerializer(data=request.data)
 
         if serializer.is_valid():
-            task = serializer.save()
+            task = serializer.save(creator=request.user)
             response_serializer = TaskDetailSerializer(task)
             return Response(
                 response_serializer.data,

@@ -23,6 +23,7 @@ class TaskModelTest(TestCase):
         task = Task.objects.create(
             board=self.board,
             title='My Test Task',
+            creator=self.user,
         )
 
         self.assertEqual(
@@ -34,6 +35,7 @@ class TaskModelTest(TestCase):
         task = Task.objects.create(
             board=self.board,
             title='My Test Task',
+            creator=self.user,
         )
 
         comment = Comment.objects.create(

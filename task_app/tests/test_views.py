@@ -45,6 +45,7 @@ class TaskViewsTest(TestCase):
             description='Test Description',
             status='to-do',
             priority='medium',
+            creator=self.owner,
             assignee=self.member,
             reviewer=self.member,
         )
@@ -760,6 +761,7 @@ class TaskViewsTest(TestCase):
             title='Other Task',
             description='Another task',
             status='to-do',
+            creator=self.owner,
             priority='medium',
             assignee=self.member,
             reviewer=self.member,

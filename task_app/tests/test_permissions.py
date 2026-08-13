@@ -45,6 +45,7 @@ class IsBoardMemberTest(TestCase):
             priority='medium',
             assignee=self.member,
             reviewer=self.member,
+            creator=self.owner,
         )
 
     def test_board_member_has_permission(self):
