@@ -35,23 +35,3 @@ class IsBoardMember(BasePermission):
         return task.board.members.filter(
             id=request.user.id
         ).exists()
-
-
-
-class IsTaskCreatorOrBoardOwner(BasePermission):
-
-    def has_permission(self, request, view):
-        task_id = view.kwargs.get('task_id')
-
-        if not task_id:
-            return False
-
-        task = Task.objects.filter(id=task_id).first()
-
-        if task is None:
-            return True
-
-        return (
-            task.creator_id == request.user.id
-            or task.board.owner_id == request.user.id
-        )

@@ -10,7 +10,7 @@ from .serializers import (
     TaskUpdateSerializer, 
     CommentSerializer,
 )
-from .permissions import IsBoardMember, IsTaskCreatorOrBoardOwner
+from .permissions import IsBoardMember
 
 
 class AssignedTasksView(APIView):
