@@ -60,6 +60,22 @@ class TaskListView(APIView):
 class TaskDetailView(APIView):
     permission_classes = [IsAuthenticated, IsBoardMember]
 
+    def get(self, request, task_id):
+        task = Task.objects.filter(id=task_id).first()
+
+        if task is None:
+            return Response(
+                {"detail": "Task not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        serializer = TaskDetailSerializer(task)
+
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK,
+        )
+
     def patch(self, request, task_id):
         task = Task.objects.filter(id=task_id).first()
 

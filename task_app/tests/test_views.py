@@ -148,7 +148,7 @@ class TaskViewsTest(TestCase):
         response=self.client.post(
             '/api/tasks/',
             data,
-            ormat='json',
+            format='json',
         )
 
         self.assertEqual(response.status_code, 401)
@@ -277,7 +277,63 @@ class TaskViewsTest(TestCase):
             response.data,
         )
 
+    def test_get_task_requires_authentication(self):
+        response=self.client.get(
+            f'/api/tasks/{self.task.id}/'
+        )
 
+        self.assertEqual(response.status_code, 401)
+
+
+
+    def test_get_task_as_board_member(self):
+        self.client.force_authenticate(
+            user=self.member
+        )
+
+        response=self.client.get(
+            f'/api/tasks/{self.task.id}/'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.data['id'],
+            self.task.id,
+        )
+        self.assertEqual(
+            response.data['title'],
+            'Test Task',
+        )
+
+
+
+    def test_get_task_as_non_member_forbidden(self):
+        self.client.force_authenticate(
+            user=self.outsider
+        )
+
+        response=self.client.get(
+            f'/api/tasks/{self.task.id}/'
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+
+
+    def test_get_task_not_found(self):
+        self.client.force_authenticate(
+            user=self.member
+        )
+
+        response=self.client.get(
+            '/api/tasks/999/'
+        )
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(
+            response.data['detail'],
+            'Task not found.',
+        )
 
     def test_update_task_requires_authentication(self):
         data={
