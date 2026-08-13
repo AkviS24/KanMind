@@ -3,49 +3,49 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
 
-
 from ..models import Task, Comment
-from .serializers import TaskDetailSerializer, TaskCreateSerializer, TaskUpdateSerializer, CommentSerializer
+from .serializers import (
+    TaskDetailSerializer, 
+    TaskCreateSerializer, 
+    TaskUpdateSerializer, 
+    CommentSerializer,
+)
 from .permissions import IsBoardMember
 
 
-
 class AssignedTasksView(APIView):
-    permission_classes=[IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        tasks=Task.objects.filter(
+        tasks = Task.objects.filter(
             assignee=request.user
-            )
+        )
 
-        serializer=TaskDetailSerializer(tasks, many=True)
+        serializer = TaskDetailSerializer(tasks, many=True)
 
         return Response(serializer.data)
-
 
 
 class ReviewingTasksView(APIView):
-    permission_classes=[IsAuthenticated]
-
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        tasks=Task.objects.filter(reviewer=request.user)
+        tasks = Task.objects.filter(reviewer=request.user)
 
-        serializer=TaskDetailSerializer(tasks, many=True)
+        serializer = TaskDetailSerializer(tasks, many=True)
 
         return Response(serializer.data)
 
 
-
 class TaskListView(APIView):
-    permission_classes=[IsAuthenticated, IsBoardMember]
+    permission_classes = [IsAuthenticated, IsBoardMember]
 
     def post(self, request):
-        serializer=TaskCreateSerializer(data=request.data)
+        serializer = TaskCreateSerializer(data=request.data)
 
         if serializer.is_valid():
-            task=serializer.save()
-            response_serializer=TaskDetailSerializer(task)
+            task = serializer.save()
+            response_serializer = TaskDetailSerializer(task)
             return Response(
                 response_serializer.data,
                 status=status.HTTP_201_CREATED,
@@ -57,20 +57,19 @@ class TaskListView(APIView):
         )
 
 
-
 class TaskDetailView(APIView):
-    permission_classes=[IsAuthenticated, IsBoardMember]
+    permission_classes = [IsAuthenticated, IsBoardMember]
 
     def patch(self, request, task_id):
-        task=Task.objects.filter(id=task_id).first()
+        task = Task.objects.filter(id=task_id).first()
 
         if task is None:
             return Response(
-                {"detail":"Task not found."},
+                {"detail": "Task not found."},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        serializer=TaskUpdateSerializer(
+        serializer = TaskUpdateSerializer(
             task,
             data=request.data,
             partial=True,
@@ -78,7 +77,7 @@ class TaskDetailView(APIView):
 
         if serializer.is_valid():
             serializer.save()
-            response_serializer=TaskDetailSerializer(serializer.instance)
+            response_serializer = TaskDetailSerializer(serializer.instance)
             return Response(
                 response_serializer.data,
                 status=status.HTTP_200_OK,
@@ -90,7 +89,7 @@ class TaskDetailView(APIView):
         )
 
     def delete(self, request, task_id):
-        task=Task.objects.filter(id=task_id).first()
+        task = Task.objects.filter(id=task_id).first()
 
         if task is None:
             return Response(
@@ -103,12 +102,11 @@ class TaskDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-
 class CommentsView(APIView):
-    permission_classes=[IsAuthenticated, IsBoardMember]
+    permission_classes = [IsAuthenticated, IsBoardMember]
 
     def get(self, request, task_id):
-        task=Task.objects.filter(id=task_id).first()
+        task = Task.objects.filter(id=task_id).first()
 
         if task is None:
             return Response(
@@ -116,14 +114,14 @@ class CommentsView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        comments=task.comments.all()
+        comments = task.comments.all()
 
-        serializer=CommentSerializer(comments, many=True)
+        serializer = CommentSerializer(comments, many=True)
 
         return Response(serializer.data)
 
     def post(self, request, task_id):
-        task=Task.objects.filter(id=task_id).first()
+        task = Task.objects.filter(id=task_id).first()
 
         if task is None:
             return Response(
@@ -131,10 +129,10 @@ class CommentsView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        serializer=CommentSerializer(data=request.data)
+        serializer = CommentSerializer(data=request.data)
 
         if serializer.is_valid():
-            comment=serializer.save(
+            comment = serializer.save(
                 task=task,
                 author=request.user,
             )
@@ -150,7 +148,7 @@ class CommentsView(APIView):
         )
 
     def delete(self, request, task_id, comment_id):
-        comment=Comment.objects.filter(
+        comment = Comment.objects.filter(
             id=comment_id,
             task_id=task_id,
         ).first()

@@ -96,7 +96,7 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
 
         if assignee and not board.members.filter(id=assignee.id).exists():
             raise serializers.ValidationError(
-                {"assignee_id": "User is not a mmember of this board."}
+                {"assignee_id": "User is not a member of this board."}
             )
 
         if reviewer and not board.members.filter(id=reviewer.id).exists():

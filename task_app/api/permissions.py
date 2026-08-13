@@ -12,11 +12,13 @@ class IsBoardMember(BasePermission):
         if task_id:
             return self._is_task_member(request, task_id)
 
+        return self._is_board_member(request)
+
+    def _is_board_member(self, request):
         board_id=request.data.get('board')
 
         if not board_id:
             return False
-
 
         return Board.objects.filter(
             id=board_id,
@@ -25,8 +27,11 @@ class IsBoardMember(BasePermission):
 
 
     def _is_task_member(self, request, task_id):
+        task=Task.objects.filter(id=task_id).first()
 
-        return Task.objects.filter(
-            id=task_id,
-            board__members=request.user,
+        if task is None:
+            return True
+
+        return task.board.members.filter(
+            id=request.user.id
         ).exists()
