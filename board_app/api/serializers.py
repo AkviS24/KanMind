@@ -8,6 +8,8 @@ from task_app.api.serializers import TaskDetailSerializer
 
 
 class BoardSerializer(serializers.ModelSerializer):
+    """Serialize board data with member and task statistics."""
+
     owner_id = serializers.IntegerField(
         source="owner.id",
         read_only=True,
@@ -25,9 +27,11 @@ class BoardSerializer(serializers.ModelSerializer):
     tasks_high_prio_count = serializers.SerializerMethodField()
 
     def get_tasks_to_do_count(self, obj):
+        """Return the number of tasks with to-do status."""
         return obj.tasks.filter(status="to-do").count()
 
     def get_tasks_high_prio_count(self, obj):
+        """Return the number of tasks with high priority."""
         return obj.tasks.filter(priority="high").count()
 
     members = serializers.PrimaryKeyRelatedField(
@@ -51,9 +55,20 @@ class BoardSerializer(serializers.ModelSerializer):
 
 
 class BoardDetailSerializer(serializers.ModelSerializer):
-    owner_id = serializers.IntegerField(source='owner.id', read_only=True,)
-    members = UserSerializer(many=True, read_only=True,)
-    tasks = TaskDetailSerializer(many=True, read_only=True,)
+    """Serialize detailed board data including members and tasks."""
+
+    owner_id = serializers.IntegerField(
+        source='owner.id',
+        read_only=True,
+    )
+    members = UserSerializer(
+        many=True,
+        read_only=True,
+    )
+    tasks = TaskDetailSerializer(
+        many=True,
+        read_only=True,
+    )
 
     class Meta:
         model = Board
@@ -67,7 +82,9 @@ class BoardDetailSerializer(serializers.ModelSerializer):
 
 
 class BoardUpdateSerializer(serializers.ModelSerializer):
+    """Validate data used to update a board."""
     class Meta:
+
         model = Board
         fields = [
             'title',

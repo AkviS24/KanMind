@@ -15,10 +15,14 @@ from .serializers import (
 
 
 class RegistrationView(APIView):
+    """Handle user registration and token creation."""
+
     permission_classes = []
 
     def post(self, request):
+        """Create a new user and return an authentication token."""
         serializer = RegistrationSerializer(data=request.data)
+
         if serializer.is_valid():
             user = serializer.save()
             token = Token.objects.create(user=user)
@@ -38,9 +42,12 @@ class RegistrationView(APIView):
 
 
 class LoginView(APIView):
+    """Handle user authentication and token retrieval."""
+
     permission_classes = []
 
     def post(self, request):
+        """Authenticate a user and return an authentication token."""
         serializer = LoginSerializer(data=request.data)
 
         if serializer.is_valid():
@@ -64,9 +71,12 @@ class LoginView(APIView):
 
 
 class EmailCheckView(APIView):
+    """Handle authenticated requests for user email lookups."""
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        """Return basic user information for a given email address."""
         serializer = EmailCheckSerializer(data=request.query_params)
 
         if not serializer.is_valid():

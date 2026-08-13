@@ -3,6 +3,8 @@ from django.db import models
 
 
 class Task(models.Model):
+    """Represents a task assigned to a board."""
+
     STATUS_CHOICES = [
         ('to-do', 'To Do'),
         ('in-progress', 'In Progress'),
@@ -55,10 +57,13 @@ class Task(models.Model):
     due_date = models.DateField(null=True, blank=True)
 
     def __str__(self):
+        """Return the task title as its string representation."""
         return self.title
 
 
 class Comment(models.Model):
+    """Represents a comment belonging to a task."""
+
     task = models.ForeignKey(
         Task,
         on_delete=models.CASCADE,
@@ -76,4 +81,5 @@ class Comment(models.Model):
         ordering = ('created_at',)
 
     def __str__(self):
+        """Return a readable representation of the comment."""
         return f'comment by {self.author} on {self.task}'

@@ -9,9 +9,12 @@ from .serializers import BoardDetailSerializer, BoardSerializer, BoardUpdateSeri
 
 
 class BoardListView(APIView):
+    """Handle listing and creation of boards."""
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        """Return boards owned by or assigned to the current user."""
         boards = Board.objects.filter(
             Q(owner=request.user) | Q(members=request.user)
         ).distinct()
@@ -21,18 +24,29 @@ class BoardListView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
+        """Create a new board owned by the current user."""
         serializer = BoardSerializer(data=request.data)
+
         if serializer.is_valid():
             serializer.save(owner=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED,)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST,)
+            return Response(
+                serializer.data,
+                status=status.HTTP_201_CREATED,
+            )
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
 
 class BoardDetailView(APIView):
+    """Handle retrieving, updating, and deleting individual boards."""
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request, board_id):
+        """Return detailed information for an accessible board."""
         board = Board.objects.filter(id=board_id).first()
 
         if board is None:
@@ -54,6 +68,7 @@ class BoardDetailView(APIView):
         return Response(serializer.data)
 
     def patch(self, request, board_id):
+        """Update an accessible board with the submitted data."""
         board = Board.objects.filter(id=board_id).first()
 
         if board is None:
@@ -90,6 +105,7 @@ class BoardDetailView(APIView):
         )
 
     def delete(self, request, board_id):
+        """Delete a board when the current user is its owner."""
         board = Board.objects.filter(id=board_id).first()
 
         if board is None:

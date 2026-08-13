@@ -6,6 +6,8 @@ from auth_app.api.serializers import UserSerializer
 
 
 class TaskDetailSerializer(serializers.ModelSerializer):
+    """Serialize task details including assigned users and comment count."""
+
     assignee = UserSerializer(read_only=True)
     reviewer = UserSerializer(read_only=True)
     comments_count = serializers.IntegerField(
@@ -29,6 +31,8 @@ class TaskDetailSerializer(serializers.ModelSerializer):
 
 
 class TaskCreateSerializer(serializers.ModelSerializer):
+    """Validate and serialize data for creating a task."""
+
     assignee_id = serializers.PrimaryKeyRelatedField(
         source='assignee',
         queryset=User.objects.all(),
@@ -43,6 +47,7 @@ class TaskCreateSerializer(serializers.ModelSerializer):
     )
 
     def validate(self, attrs):
+        """Ensure assignee and reviewer belong to the selected board."""
         board = attrs['board']
         assignee = attrs.get('assignee')
         reviewer = attrs.get('reviewer')
@@ -74,6 +79,8 @@ class TaskCreateSerializer(serializers.ModelSerializer):
 
 
 class TaskUpdateSerializer(serializers.ModelSerializer):
+    """Validate and serialize data for updating a task."""
+
     assignee_id = serializers.PrimaryKeyRelatedField(
         source='assignee',
         queryset=User.objects.all(),
@@ -88,6 +95,7 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
     )
 
     def validate(self, attrs):
+        """Ensure assignee and reviewer belong to the task's board."""
         board = self.instance.board
         assignee = attrs.get('assignee')
         reviewer = attrs.get('reviewer')
@@ -117,6 +125,7 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    """Serialize comments together with their task and author."""
     task = serializers.PrimaryKeyRelatedField(read_only=True)
     author = UserSerializer(read_only=True)
 
