@@ -4,8 +4,8 @@ from rest_framework.views import APIView
 from rest_framework import status
 
 
-from ..models import Task
-from .serializers import TaskDetailSerializer, TaskCreateSerializer, TaskUpdateSerializer
+from ..models import Task, Comment
+from .serializers import TaskDetailSerializer, TaskCreateSerializer, TaskUpdateSerializer, CommentSerializer
 from .permissions import IsBoardMember
 
 
@@ -99,5 +99,68 @@ class TaskDetailView(APIView):
             )
 
         task.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+
+class CommentsView(APIView):
+    permission_classes=[IsAuthenticated, IsBoardMember]
+
+    def get(self, request, task_id):
+        task=Task.objects.filter(id=task_id).first()
+
+        if task is None:
+            return Response(
+                {"detail": "Task not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        comments=task.comments.all()
+
+        serializer=CommentSerializer(comments, many=True)
+
+        return Response(serializer.data)
+
+    def post(self, request, task_id):
+        task=Task.objects.filter(id=task_id).first()
+
+        if task is None:
+            return Response(
+                {"detail": "Task not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        serializer=CommentSerializer(data=request.data)
+
+        if serializer.is_valid():
+            comment=serializer.save(
+                task=task,
+                author=request.user,
+            )
+
+            return Response(
+                CommentSerializer(comment).data,
+                status=status.HTTP_201_CREATED,
+            )
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    def delete(self, request, task_id, comment_id):
+        comment=Comment.objects.filter(
+            id=comment_id,
+            task_id=task_id,
+        ).first()
+
+        if comment is None:
+            return Response(
+                {"detail": "Comment not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        comment.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)

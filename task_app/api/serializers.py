@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from auth_app.models import User
-from ..models import Task
+from ..models import Task, Comment
 from auth_app.api.serializers import UserSerializer
 
 
@@ -116,4 +116,20 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
             'assignee_id',
             'reviewer_id',
             'due_date',
+        ]
+
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    task=serializers.PrimaryKeyRelatedField(read_only=True)
+    author=UserSerializer(read_only=True)
+
+    class Meta: 
+        model=Comment
+        fields=[
+            'id',
+            'task',
+            'author',
+            'content',
+            'created_at',
         ]
