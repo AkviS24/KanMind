@@ -75,7 +75,24 @@ class RegistrationViewTest(TestCase):
             response.data,
         )
 
+    def test_registration_invalid_data(self):
+        data = {
+            'fullname': '',
+            'email': 'invalid-registration@test.com',
+            'password': 'password123',
+            'repeated_password': 'password123',
+        }
 
+        response = self.client.post(
+            '/api/registration/',
+            data,
+            format='json',
+        )
+
+        self.assertEqual(
+            response.status_code,
+            400,
+        )
 
 class LoginViewTest(TestCase):
 
@@ -144,7 +161,28 @@ class LoginViewTest(TestCase):
             response.data,
         )
 
+    def test_login_with_existing_token(self):
+        Token.objects.create(user=self.user)
 
+        data = {
+            'email': 'login-view@test.com',
+            'password': 'password123',
+        }
+
+        response = self.client.post(
+            '/api/login/',
+            data,
+            format='json',
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+        self.assertIn(
+            'token',
+            response.data,
+        )
 
 class EmailCheckViewTest(TestCase):
 
@@ -229,4 +267,26 @@ class EmailCheckViewTest(TestCase):
         self.assertEqual(
             response.status_code,
             404,
+        )
+
+    def test_email_check_missing_email(self):
+        user = User.objects.create_user(
+            email='email-check@test.com',
+            password='password123',
+            fullname='Email Check User',
+        )
+
+        self.client.force_authenticate(user=user)
+
+        response = self.client.get(
+            '/api/email-check/',
+        )
+
+        self.assertEqual(
+            response.status_code,
+            400,
+        )
+        self.assertIn(
+            'email',
+            response.data,
         )

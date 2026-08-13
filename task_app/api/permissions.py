@@ -7,7 +7,7 @@ from task_app.models import Task
 class IsBoardMember(BasePermission):
 
     def has_permission(self, request, view):
-        task_id=view.kwargs.get('task_id')
+        task_id = view.kwargs.get('task_id')
 
         if task_id:
             return self._is_task_member(request, task_id)
@@ -15,7 +15,7 @@ class IsBoardMember(BasePermission):
         return self._is_board_member(request)
 
     def _is_board_member(self, request):
-        board_id=request.data.get('board')
+        board_id = request.data.get('board')
 
         if not board_id:
             return False
@@ -25,9 +25,8 @@ class IsBoardMember(BasePermission):
             members=request.user,
         ).exists()
 
-
     def _is_task_member(self, request, task_id):
-        task=Task.objects.filter(id=task_id).first()
+        task = Task.objects.filter(id=task_id).first()
 
         if task is None:
             return True

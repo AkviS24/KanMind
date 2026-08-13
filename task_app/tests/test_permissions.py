@@ -67,7 +67,7 @@ class IsBoardMemberTest(TestCase):
         )
 
     def test_non_member_has_no_permission(self):
-        permission=IsBoardMember()
+        permission = IsBoardMember()
 
         request = type(
             'Request',
@@ -84,12 +84,10 @@ class IsBoardMemberTest(TestCase):
             permission.has_permission(request, view)
         )
 
-
-
     def test_board_member_has_task_permission(self):
-        permission=IsBoardMember()
+        permission = IsBoardMember()
 
-        request=type(
+        request = type(
             'Request',
             (),
             {
@@ -98,7 +96,7 @@ class IsBoardMemberTest(TestCase):
             },
         )()
 
-        view=type(
+        view = type(
             'View',
             (),
             {
@@ -110,12 +108,10 @@ class IsBoardMemberTest(TestCase):
             permission.has_permission(request, view)
         )
 
-
-
     def test_non_member_has_no_task_permission(self):
-        permission=IsBoardMember()
+        permission = IsBoardMember()
 
-        request=type(
+        request = type(
             'Request',
             (),
             {
@@ -124,7 +120,7 @@ class IsBoardMemberTest(TestCase):
             },
         )()
 
-        view=type(
+        view = type(
             'View',
             (),
             {
@@ -136,12 +132,10 @@ class IsBoardMemberTest(TestCase):
             permission.has_permission(request, view)
         )
 
-
-
     def test_no_board_or_task_has_no_permission(self):
-        permission=IsBoardMember()
+        permission = IsBoardMember()
 
-        request=type(
+        request = type(
             'Request',
             (),
             {
@@ -150,7 +144,7 @@ class IsBoardMemberTest(TestCase):
             },
         )()
 
-        view=type('View', (), {'kwargs': {}})()
+        view = type('View', (), {'kwargs': {}})()
 
         self.assertFalse(
             permission.has_permission(request, view)

@@ -1,11 +1,10 @@
 from django.test import TestCase
 
-
 from auth_app.models import User
 from board_app.models import Board
 from task_app.models import Task
 from task_app.api.serializers import (
-    TaskCreateSerializer, 
+    TaskCreateSerializer,
     TaskUpdateSerializer,
 )
 
@@ -89,46 +88,13 @@ class TaskCreateSerializerTest(TestCase):
             'due_date': '2026-08-20',
         }
 
-        serializer=TaskCreateSerializer(data=data)
+        serializer = TaskCreateSerializer(data=data)
 
         self.assertFalse(serializer.is_valid())
         self.assertIn('reviewer_id', serializer.errors)
 
-
     def test_update_rejects_assignee_not_in_board(self):
-        task=Task.objects.create(
-            board=self.board,
-            title='Test Task',
-            description= 'Test Description',
-            status='to-do',
-            priority='medium',
-            assignee=self.member,
-            reviewer=self.member,
-            creator=self.owner,
-        )
-
-        outsider=User.objects.create_user(
-            email='update-outsider@test.com',
-            password='password123',
-            fullname='Update Outsider',
-        )
-
-        data={
-            'assignee_id': outsider.id,
-        }
-
-        serializer=TaskUpdateSerializer(
-            task,
-            data=data,
-            partial=True,
-        )
-
-        self.assertFalse(serializer.is_valid())
-        self.assertIn('assignee_id', serializer.errors)
-
-
-    def test_update_rejects_reviewer_not_in_board(self):
-        task=Task.objects.create(
+        task = Task.objects.create(
             board=self.board,
             title='Test Task',
             description='Test Description',
@@ -139,17 +105,48 @@ class TaskCreateSerializerTest(TestCase):
             creator=self.owner,
         )
 
-        outsider=User.objects.create_user(
+        outsider = User.objects.create_user(
+            email='update-outsider@test.com',
+            password='password123',
+            fullname='Update Outsider',
+        )
+
+        data = {
+            'assignee_id': outsider.id,
+        }
+
+        serializer = TaskUpdateSerializer(
+            task,
+            data=data,
+            partial=True,
+        )
+
+        self.assertFalse(serializer.is_valid())
+        self.assertIn('assignee_id', serializer.errors)
+
+    def test_update_rejects_reviewer_not_in_board(self):
+        task = Task.objects.create(
+            board=self.board,
+            title='Test Task',
+            description='Test Description',
+            status='to-do',
+            priority='medium',
+            assignee=self.member,
+            reviewer=self.member,
+            creator=self.owner,
+        )
+
+        outsider = User.objects.create_user(
             email='reviewer-update-outsider@test.com',
             password='password123',
             fullname='Reviewer Outsider',
         )
 
-        data={
+        data = {
             'reviewer_id': outsider.id,
         }
 
-        serializer=TaskUpdateSerializer(
+        serializer = TaskUpdateSerializer(
             task,
             data=data,
             partial=True,

@@ -9,27 +9,27 @@ from task_app.models import Task, Comment
 class TaskViewsTest(TestCase):
 
     def setUp(self):
-        self.client=APIClient()
+        self.client = APIClient()
 
-        self.owner=User.objects.create_user(
+        self.owner = User.objects.create_user(
             email='owner@test.com',
             password='password123',
             fullname='Board Owner',
         )
 
-        self.member=User.objects.create_user(
+        self.member = User.objects.create_user(
             email='member@test.com',
             password='password123',
             fullname='Board Member',
         )
 
-        self.outsider=User.objects.create_user(
+        self.outsider = User.objects.create_user(
             email='outsider@test.com',
             password='password123',
             fullname='Outsider',
         )
 
-        self.board=Board.objects.create(
+        self.board = Board.objects.create(
             title='Test Board',
             owner=self.owner,
         )
@@ -39,7 +39,7 @@ class TaskViewsTest(TestCase):
             self.member,
         )
 
-        self.task=Task.objects.create(
+        self.task = Task.objects.create(
             board=self.board,
             title='Test Task',
             description='Test Description',
@@ -50,23 +50,19 @@ class TaskViewsTest(TestCase):
             reviewer=self.member,
         )
 
-
-
     def test_assigned_tasks_requires_authentication(self):
-        response=self.client.get(
+        response = self.client.get(
             '/api/tasks/assigned-to-me/'
         )
 
         self.assertEqual(response.status_code, 401)
-
-
 
     def test_assigned_tasks_returns_user_tasks(self):
         self.client.force_authenticate(
             user=self.member
         )
 
-        response=self.client.get(
+        response = self.client.get(
             '/api/tasks/assigned-to-me/'
         )
 
@@ -76,38 +72,32 @@ class TaskViewsTest(TestCase):
             response.data[0]['id'],
             self.task.id,
         )
-
-
 
     def test_assigned_tasks_excludes_other_users_tasks(self):
         self.client.force_authenticate(
             user=self.owner
         )
 
-        response=self.client.get(
+        response = self.client.get(
             '/api/tasks/assigned-to-me/'
         )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 0)
 
-
-
     def test_reviewing_tasks_requires_authentication(self):
-        response=self.client.get(
+        response = self.client.get(
             '/api/tasks/reviewing/'
         )
 
         self.assertEqual(response.status_code, 401)
-
-
 
     def test_reviewing_tasks_returns_user_tasks(self):
         self.client.force_authenticate(
             user=self.member
         )
 
-        response=self.client.get(
+        response = self.client.get(
             '/api/tasks/reviewing/'
         )
 
@@ -118,24 +108,20 @@ class TaskViewsTest(TestCase):
             self.task.id,
         )
 
-
-
     def test_reviewing_tasks_excludes_other_users_tasks(self):
         self.client.force_authenticate(
             user=self.owner
         )
 
-        response=self.client.get(
+        response = self.client.get(
             '/api/tasks/reviewing/'
         )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 0)
 
-
-
     def test_create_task_requires_authentication(self):
-        data={
+        data = {
             'board': self.board.id,
             'title': 'New Task',
             'description': 'New Description',
@@ -146,7 +132,7 @@ class TaskViewsTest(TestCase):
             'due_date': '2026-08-20',
         }
 
-        response=self.client.post(
+        response = self.client.post(
             '/api/tasks/',
             data,
             format='json',
@@ -154,14 +140,12 @@ class TaskViewsTest(TestCase):
 
         self.assertEqual(response.status_code, 401)
 
-
-
     def test_create_task_as_board_member(self):
         self.client.force_authenticate(
             user=self.member
         )
 
-        data={
+        data = {
             'board': self.board.id,
             'title': 'Created Task',
             'description': 'Created through API',
@@ -172,7 +156,7 @@ class TaskViewsTest(TestCase):
             'due_date': '2026-08-20',
         }
 
-        response=self.client.post(
+        response = self.client.post(
             '/api/tasks/',
             data,
             format='json',
@@ -192,14 +176,12 @@ class TaskViewsTest(TestCase):
             self.member.id,
         )
 
-
-
     def test_create_task_as_non_member_forbidden(self):
         self.client.force_authenticate(
             user=self.outsider
         )
 
-        data={
+        data = {
             'board': self.board.id,
             'title': 'Forbidden Task',
             'description': 'Should not be created',
@@ -210,7 +192,7 @@ class TaskViewsTest(TestCase):
             'due_date': '2026-08-20',
         }
 
-        response=self.client.post(
+        response = self.client.post(
             '/api/tasks/',
             data,
             format='json',
@@ -218,14 +200,12 @@ class TaskViewsTest(TestCase):
 
         self.assertEqual(response.status_code, 403)
 
-
-
     def test_create_task_rejects_assignee_not_in_board(self):
         self.client.force_authenticate(
             user=self.member
         )
 
-        data={
+        data = {
             'board': self.board.id,
             'title': 'Invalid Assignee Task',
             'description': 'Should be rejected',
@@ -236,7 +216,7 @@ class TaskViewsTest(TestCase):
             'due_date': '2026-08-20',
         }
 
-        response=self.client.post(
+        response = self.client.post(
             '/api/tasks/',
             data,
             format='json',
@@ -248,14 +228,12 @@ class TaskViewsTest(TestCase):
             response.data,
         )
 
-
-
     def test_create_task_rejects_reviewer_not_in_board(self):
         self.client.force_authenticate(
             user=self.member
         )
 
-        data={
+        data = {
             'board': self.board.id,
             'title': 'Invalid Reviewer Task',
             'description': 'Should be rejected',
@@ -266,7 +244,7 @@ class TaskViewsTest(TestCase):
             'due_date': '2026-08-20',
         }
 
-        response=self.client.post(
+        response = self.client.post(
             '/api/tasks/',
             data,
             format='json',
@@ -279,20 +257,18 @@ class TaskViewsTest(TestCase):
         )
 
     def test_get_task_requires_authentication(self):
-        response=self.client.get(
+        response = self.client.get(
             f'/api/tasks/{self.task.id}/'
         )
 
         self.assertEqual(response.status_code, 401)
-
-
 
     def test_get_task_as_board_member(self):
         self.client.force_authenticate(
             user=self.member
         )
 
-        response=self.client.get(
+        response = self.client.get(
             f'/api/tasks/{self.task.id}/'
         )
 
@@ -306,27 +282,23 @@ class TaskViewsTest(TestCase):
             'Test Task',
         )
 
-
-
     def test_get_task_as_non_member_forbidden(self):
         self.client.force_authenticate(
             user=self.outsider
         )
 
-        response=self.client.get(
+        response = self.client.get(
             f'/api/tasks/{self.task.id}/'
         )
 
         self.assertEqual(response.status_code, 403)
-
-
 
     def test_get_task_not_found(self):
         self.client.force_authenticate(
             user=self.member
         )
 
-        response=self.client.get(
+        response = self.client.get(
             '/api/tasks/999/'
         )
 
@@ -337,11 +309,11 @@ class TaskViewsTest(TestCase):
         )
 
     def test_update_task_requires_authentication(self):
-        data={
+        data = {
             'title': 'Updated Task',
         }
 
-        response=self.client.patch(
+        response = self.client.patch(
             f'/api/tasks/{self.task.id}/',
             data,
             format='json',
@@ -349,19 +321,17 @@ class TaskViewsTest(TestCase):
 
         self.assertEqual(response.status_code, 401)
 
-
-
     def test_update_task_as_board_member(self):
         self.client.force_authenticate(
             user=self.member
         )
 
-        data={
+        data = {
             'title': 'Updated Task',
             'priority': 'high',
         }
 
-        response=self.client.patch(
+        response = self.client.patch(
             f'/api/tasks/{self.task.id}/',
             data,
             format='json',
@@ -377,18 +347,16 @@ class TaskViewsTest(TestCase):
             'high',
         )
 
-
-
     def test_update_task_as_non_member_forbidden(self):
         self.client.force_authenticate(
             user=self.outsider
         )
 
-        data={
+        data = {
             'title': 'Forbidden Update',
         }
 
-        response=self.client.patch(
+        response = self.client.patch(
             f'/api/tasks/{self.task.id}/',
             data,
             format='json',
@@ -396,18 +364,16 @@ class TaskViewsTest(TestCase):
 
         self.assertEqual(response.status_code, 403)
 
-
-
     def test_update_task_not_found(self):
         self.client.force_authenticate(
             user=self.member
         )
 
-        data={
+        data = {
             'title': 'Updated Task',
         }
 
-        response=self.client.patch(
+        response = self.client.patch(
             '/api/tasks/999/',
             data,
             format='json',
@@ -419,18 +385,16 @@ class TaskViewsTest(TestCase):
             'Task not found.',
         )
 
-
-
     def test_update_task_rejects_assignee_not_in_board(self):
         self.client.force_authenticate(
             user=self.member
         )
 
-        data={
+        data = {
             'assignee_id': self.outsider.id,
         }
 
-        response=self.client.patch(
+        response = self.client.patch(
             f'/api/tasks/{self.task.id}/',
             data,
             format='json',
@@ -442,18 +406,16 @@ class TaskViewsTest(TestCase):
             response.data,
         )
 
-
-
     def test_update_task_rejects_reviewer_not_in_board(self):
         self.client.force_authenticate(
             user=self.member
         )
 
-        data={
+        data = {
             'reviewer_id': self.outsider.id,
         }
 
-        response=self.client.patch(
+        response = self.client.patch(
             f'/api/tasks/{self.task.id}/',
             data,
             format='json',
@@ -465,39 +427,32 @@ class TaskViewsTest(TestCase):
             response.data,
         )
 
-
-
     def test_delete_task_requires_authentication(self):
-        response=self.client.delete(
+        response = self.client.delete(
             f'/api/tasks/{self.task.id}/'
         )
 
         self.assertEqual(response.status_code, 401)
-
-
 
     def test_delete_task_as_non_member_forbidden(self):
         self.client.force_authenticate(
             user=self.outsider
         )
 
-        response=self.client.delete(
+        response = self.client.delete(
             f'/api/tasks/{self.task.id}/'
         )
 
         self.assertEqual(response.status_code, 403)
 
-
-
-
-    def test_delete_task_as_board_member(self):
+    def test_delete_task_as_creator(self):
         self.client.force_authenticate(
-            user=self.member
+            user=self.owner
         )
 
-        task_id=self.task.id
+        task_id = self.task.id
 
-        response=self.client.delete(
+        response = self.client.delete(
             f'/api/tasks/{task_id}/'
         )
 
@@ -507,13 +462,27 @@ class TaskViewsTest(TestCase):
         )
 
 
+    def test_delete_task_as_board_member_forbidden(self):
+        self.client.force_authenticate(
+            user=self.member
+        )
+
+        response = self.client.delete(
+            f'/api/tasks/{self.task.id}/'
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+        self.assertTrue(
+            Task.objects.filter(id=self.task.id).exists()
+        )
 
     def test_delete_task_not_found(self):
         self.client.force_authenticate(
             user=self.member
         )
 
-        response=self.client.delete(
+        response = self.client.delete(
             '/api/tasks/999/'
         )
 
@@ -523,16 +492,12 @@ class TaskViewsTest(TestCase):
             'Task not found.',
         )
 
-
-
     def test_get_comments_requires_authentication(self):
-        response=self.client.get(
+        response = self.client.get(
             f'/api/tasks/{self.task.id}/comments/'
         )
 
         self.assertEqual(response.status_code, 401)
-
-
 
     def test_get_comments_as_board_member(self):
         Comment.objects.create(
@@ -545,7 +510,7 @@ class TaskViewsTest(TestCase):
             user=self.member
         )
 
-        response=self.client.get(
+        response = self.client.get(
             f'/api/tasks/{self.task.id}/comments/'
         )
 
@@ -556,31 +521,27 @@ class TaskViewsTest(TestCase):
             'Test Comment',
         )
 
-
-
     def test_get_comments_as_non_member_forbidden(self):
         self.client.force_authenticate(
             user=self.outsider
         )
 
-        response=self.client.get(
+        response = self.client.get(
             f'/api/tasks/{self.task.id}/comments/'
         )
 
         self.assertEqual(response.status_code, 403)
-
-
 
     def test_create_comment_as_board_member(self):
         self.client.force_authenticate(
             user=self.member
         )
 
-        data={
+        data = {
             'content': 'New Test Comment',
         }
 
-        response=self.client.post(
+        response = self.client.post(
             f'/api/tasks/{self.task.id}/comments/',
             data,
             format='json',
@@ -600,18 +561,16 @@ class TaskViewsTest(TestCase):
             self.member.id,
         )
 
-
-
     def test_create_comment_as_non_member_forbidden(self):
         self.client.force_authenticate(
             user=self.outsider
         )
 
-        data={
+        data = {
             'content': 'Forbidden Comment',
         }
 
-        response=self.client.post(
+        response = self.client.post(
             f'/api/tasks/{self.task.id}/comments/',
             data,
             format='json',
@@ -619,14 +578,12 @@ class TaskViewsTest(TestCase):
 
         self.assertEqual(response.status_code, 403)
 
-
-
     def test_create_comment_rejects_missing_content(self):
         self.client.force_authenticate(
             user=self.member
         )
 
-        response=self.client.post(
+        response = self.client.post(
             f'/api/tasks/{self.task.id}/comments/',
             {},
             format='json',
@@ -638,18 +595,16 @@ class TaskViewsTest(TestCase):
             response.data,
         )
 
-
-
     def test_create_comment_task_not_found(self):
         self.client.force_authenticate(
             user=self.member
         )
 
-        data={
+        data = {
             'content': 'Comment on missing task',
         }
 
-        response=self.client.post(
+        response = self.client.post(
             '/api/tasks/999/comments/',
             data,
             format='json',
@@ -661,14 +616,12 @@ class TaskViewsTest(TestCase):
             'Task not found.',
         )
 
-
-
     def test_get_comments_task_not_found(self):
         self.client.force_authenticate(
             user=self.member
         )
 
-        response=self.client.get(
+        response = self.client.get(
             '/api/tasks/999/comments/'
         )
 
@@ -678,25 +631,21 @@ class TaskViewsTest(TestCase):
             'Task not found.',
         )
 
-
-
     def test_delete_comment_requires_authentication(self):
-        comment=Comment.objects.create(
+        comment = Comment.objects.create(
             task=self.task,
             author=self.member,
             content='Comment to delete',
         )
 
-        response=self.client.delete(
+        response = self.client.delete(
             f'/api/tasks/{self.task.id}/comments/{comment.id}/'
         )
 
         self.assertEqual(response.status_code, 401)
 
-
-
     def test_delete_comment_as_non_member_forbidden(self):
-        comment=Comment.objects.create(
+        comment = Comment.objects.create(
             task=self.task,
             author=self.member,
             content='Protected Comment',
@@ -706,44 +655,59 @@ class TaskViewsTest(TestCase):
             user=self.outsider
         )
 
-        response=self.client.delete(
+        response = self.client.delete(
             f'/api/tasks/{self.task.id}/comments/{comment.id}/'
         )
 
         self.assertEqual(response.status_code, 403)
 
-
-
-    def test_delete_comment_as_board_member(self):
-        comment=Comment.objects.create(
+    def test_delete_comment_as_author(self):
+        comment = Comment.objects.create(
             task=self.task,
             author=self.member,
             content='Comment to delete',
         )
 
-        comment_id=comment.id
+        self.client.force_authenticate(
+            user=self.member
+        )
+
+        response = self.client.delete(
+            f'/api/tasks/{self.task.id}/comments/{comment.id}/'
+        )
+
+        self.assertEqual(response.status_code, 204)
+        self.assertFalse(
+            Comment.objects.filter(id=comment.id).exists()
+        )
+
+
+    def test_delete_comment_as_other_board_member_forbidden(self):
+        comment = Comment.objects.create(
+            task=self.task,
+            author=self.owner,
+            content='Protected Comment',
+        )
 
         self.client.force_authenticate(
             user=self.member
         )
 
-        response=self.client.delete(
-            f'/api/tasks/{self.task.id}/comments/{comment_id}/'
+        response = self.client.delete(
+            f'/api/tasks/{self.task.id}/comments/{comment.id}/'
         )
 
-        self.assertEqual(response.status_code, 204)
-        self.assertFalse(
-            Comment.objects.filter(id=comment_id).exists()
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(
+            Comment.objects.filter(id=comment.id).exists()
         )
-
-
 
     def test_delete_comment_not_found(self):
         self.client.force_authenticate(
             user=self.member
         )
 
-        response=self.client.delete(
+        response = self.client.delete(
             f'/api/tasks/{self.task.id}/comments/999/'
         )
 
@@ -753,10 +717,8 @@ class TaskViewsTest(TestCase):
             'Comment not found.',
         )
 
-
-
     def test_delete_comment_wrong_task_not_found(self):
-        other_task=Task.objects.create(
+        other_task = Task.objects.create(
             board=self.board,
             title='Other Task',
             description='Another task',
@@ -767,7 +729,7 @@ class TaskViewsTest(TestCase):
             reviewer=self.member,
         )
 
-        comment=Comment.objects.create(
+        comment = Comment.objects.create(
             task=other_task,
             author=self.member,
             content='Comment on other task',
@@ -777,7 +739,7 @@ class TaskViewsTest(TestCase):
             user=self.member
         )
 
-        response=self.client.delete(
+        response = self.client.delete(
             f'/api/tasks/{self.task.id}/comments/{comment.id}/'
         )
 
