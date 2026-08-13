@@ -54,3 +54,13 @@ class LoginSerializer(serializers.Serializer):
 
 class EmailCheckSerializer(serializers.Serializer):
     email=serializers.EmailField()
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=User
+        fields=[
+            'id',
+            'email',
+            'fullname',
+        ]
