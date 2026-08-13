@@ -5,7 +5,7 @@ KanMind is a task and project management application developed as part of the De
 
 This repository contains the Django REST Framework backend of the KanMind application. It provides the REST API for user authentication, boards, tasks, comments, and related functionality.
 
-The corresponding frontend is available here:
+The corresponding frontend is maintained in a separate repository:
 
 Frontend Repository:
 https://github.com/Developer-Akademie-Backendkurs/project.KanMind
@@ -25,9 +25,6 @@ SQLite
 Coverage.py
 pycodestyle
 Features
-
-The KanMind backend provides the following functionality:
-
 Authentication
 User registration
 User login
@@ -35,7 +32,7 @@ Token-based authentication
 Email address lookup
 Boards
 Create boards
-List boards
+List accessible boards
 View board details
 Update boards
 Delete boards
@@ -52,8 +49,8 @@ Task permissions based on board membership
 Comments
 Create comments for tasks
 Retrieve task comments
-Update comments
 Delete comments
+Permission handling for comment authors
 Requirements
 
 Make sure the following software is installed:
@@ -71,32 +68,36 @@ cd KanMind
 python -m venv .venv
 3. Activate the virtual environment
 
-On Windows:
+Windows:
 
 .venv\Scripts\activate
 
-On macOS/Linux:
+macOS/Linux:
 
 source .venv/bin/activate
 4. Install the dependencies
 pip install -r requirements.txt
 5. Apply database migrations
 python manage.py migrate
+
+This creates the required SQLite database and applies all Django migrations.
+
 6. Start the development server
 python manage.py runserver
 
 The development server will normally be available at:
 
 http://127.0.0.1:8000/
+
 Running Tests
 
-The project contains automated tests for the authentication, board, and task functionality.
+The project contains automated tests covering authentication, boards, tasks, permissions, serializers, and models.
 
 To run the complete test suite:
 
 python manage.py test
 
-The current test suite contains more than 100 automated tests.
+The current test suite contains 112 automated tests.
 
 Test Coverage
 
@@ -112,11 +113,11 @@ coverage report
 
 The current project reaches 99% overall test coverage.
 
-The project therefore exceeds the required minimum test coverage of 95%.
+This exceeds the required minimum test coverage of 95%.
 
 Code Quality
 
-The project follows common Python and Django coding conventions.
+The project follows common Python, Django, and PEP 8 coding conventions.
 
 The codebase is structured into separate Django applications:
 
@@ -127,25 +128,30 @@ core – Django project configuration
 
 The project also uses pycodestyle for Python code style checks.
 
+Relevant classes and methods are documented using Python docstrings to describe their purpose and functionality.
+
 API Structure
 
 The API is organized into the following main areas:
 
+Authentication
 /api/registration/
 /api/login/
 /api/email-check/
-
+Boards
 /api/boards/
-
+/api/boards/<board_id>/
+Tasks
 /api/tasks/
 /api/tasks/assigned-to-me/
 /api/tasks/reviewing/
-
 /api/tasks/<task_id>/
 /api/tasks/<task_id>/comments/
 /api/tasks/<task_id>/comments/<comment_id>/
 
 Authentication is required for protected API endpoints.
+
+The API uses token-based authentication. After successful registration or login, the API returns an authentication token that can be used to access protected endpoints.
 
 For the complete endpoint specification, refer to the KanMind API endpoint documentation provided by the Developer Akademie.
 
@@ -199,6 +205,8 @@ The frontend communicates with this Django REST API.
 Development
 
 When working on the project, make sure the virtual environment is activated before running Django commands:
+
+Windows:
 
 .venv\Scripts\activate
 
