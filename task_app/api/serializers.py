@@ -117,6 +117,7 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
         fields = [
             'title',
             'status',
+            'description',
             'priority',
             'assignee_id',
             'reviewer_id',
