@@ -90,3 +90,27 @@ class BoardUpdateSerializer(serializers.ModelSerializer):
             'title',
             'members',
         ]
+
+
+
+class BoardPatchResponseSerializer(serializers.ModelSerializer):
+    """A serializer for the patch Response"""
+    owner_data = UserSerializer(
+        source="owner",
+        read_only=True,
+    )
+
+    members_data = UserSerializer(
+        source="members",
+        many=True,
+        read_only=True,
+    )
+
+    class Meta:
+        model = Board
+        fields = [
+            "id",
+            "title",
+            "owner_data",
+            "members_data",
+        ]

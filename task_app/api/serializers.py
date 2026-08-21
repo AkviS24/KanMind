@@ -9,6 +9,10 @@ class TaskDetailSerializer(serializers.ModelSerializer):
     """Serialize task details including assigned users and comment count."""
 
     assignee = UserSerializer(read_only=True)
+    board = serializers.IntegerField(
+        source="board_id",
+        read_only=True,
+    )
     reviewer = UserSerializer(read_only=True)
     comments_count = serializers.IntegerField(
         source='comments.count',
@@ -19,6 +23,7 @@ class TaskDetailSerializer(serializers.ModelSerializer):
         model = Task
         fields = [
             'id',
+            'board',
             'title',
             'description',
             'status',
@@ -127,15 +132,16 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     """Serialize comments together with their task and author."""
-    task = serializers.PrimaryKeyRelatedField(read_only=True)
-    author = UserSerializer(read_only=True)
+    author = serializers.CharField(
+        source="author.fullname",
+        read_only=True,
+    )
 
     class Meta:
         model = Comment
         fields = [
             'id',
-            'task',
+            'created_at',
             'author',
             'content',
-            'created_at',
         ]

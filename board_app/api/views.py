@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from ..models import Board
-from .serializers import BoardDetailSerializer, BoardSerializer, BoardUpdateSerializer
+from .serializers import BoardDetailSerializer, BoardSerializer, BoardUpdateSerializer, BoardPatchResponseSerializer
 
 
 class BoardListView(APIView):
@@ -93,7 +93,7 @@ class BoardDetailView(APIView):
 
         if serializer.is_valid():
             serializer.save()
-            response_serializer = BoardDetailSerializer(serializer.instance)
+            response_serializer = BoardPatchResponseSerializer(serializer.instance)
             return Response(
                 response_serializer.data,
                 status=status.HTTP_200_OK,

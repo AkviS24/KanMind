@@ -1,4 +1,5 @@
 from rest_framework.permissions import BasePermission
+from rest_framework.exceptions import NotFound
 
 from board_app.models import Board
 from task_app.models import Task
@@ -23,9 +24,13 @@ class IsBoardMember(BasePermission):
         if not board_id:
             return False
 
-        return Board.objects.filter(
-            id=board_id,
-            members=request.user,
+        board = Board.objects.filter(id=board_id).first()
+
+        if board is None:
+            raise NotFound("Board not found...")
+
+        return board.members.filter(
+            id=request.user.id
         ).exists()
 
     def _is_task_member(self, request, task_id):
