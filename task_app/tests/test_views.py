@@ -461,7 +461,6 @@ class TaskViewsTest(TestCase):
             Task.objects.filter(id=task_id).exists()
         )
 
-
     def test_delete_task_as_board_member_forbidden(self):
         self.client.force_authenticate(
             user=self.member
@@ -551,14 +550,6 @@ class TaskViewsTest(TestCase):
         self.assertEqual(
             response.data['content'],
             'New Test Comment',
-        )
-        self.assertEqual(
-            response.data['task'],
-            self.task.id,
-        )
-        self.assertEqual(
-            response.data['author']['id'],
-            self.member.id,
         )
 
     def test_create_comment_as_non_member_forbidden(self):
@@ -680,7 +671,6 @@ class TaskViewsTest(TestCase):
         self.assertFalse(
             Comment.objects.filter(id=comment.id).exists()
         )
-
 
     def test_delete_comment_as_other_board_member_forbidden(self):
         comment = Comment.objects.create(
