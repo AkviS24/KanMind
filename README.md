@@ -9,9 +9,11 @@ This repository contains the Django REST Framework backend of the KanMind applic
 The corresponding frontend is maintained in a separate repository.
 
 **Frontend Repository:**  
+
 https://github.com/Developer-Akademie-Backendkurs/project.KanMind
 
 **Backend Repository:**  
+
 https://github.com/AkviS24/KanMind
 
 ---
@@ -85,60 +87,56 @@ The project dependencies are listed in `requirements.txt`.
 
 ---
 
+## Environment Variables
+
+Create a `.env` file in the root directory of the backend project, at the same level as `manage.py`.
+
+Add the Django secret key to the `.env` file:
+
+    SECRET_KEY=your-secret-key-here
+
+The `.env` file is included in `.gitignore` and must not be committed to the repository.
+
+---
+
 ## Installation
 
 ### 1. Clone the repository
 
-```bash
-git clone https://github.com/AkviS24/KanMind.git
-cd KanMind
-```
+    git clone https://github.com/AkviS24/KanMind.git
+    cd KanMind
 
 ### 2. Create a virtual environment
 
-```bash
-python -m venv .venv
-```
+    python -m venv .venv
 
 ### 3. Activate the virtual environment
 
 **Windows:**
 
-```bash
-.venv\Scripts\activate
-```
+    .venv\Scripts\activate
 
 **macOS/Linux:**
 
-```bash
-source .venv/bin/activate
-```
+    source .venv/bin/activate
 
 ### 4. Install the dependencies
 
-```bash
-pip install -r requirements.txt
-```
+    pip install -r requirements.txt
 
 ### 5. Apply database migrations
 
-```bash
-python manage.py migrate
-```
+    python manage.py migrate
 
 This creates the required SQLite database and applies all Django migrations.
 
 ### 6. Start the development server
 
-```bash
-python manage.py runserver
-```
+    python manage.py runserver
 
 The development server will normally be available at:
 
-```text
-http://127.0.0.1:8000/
-```
+    http://127.0.0.1:8000/
 
 ---
 
@@ -148,20 +146,19 @@ The project contains automated tests covering authentication, boards, tasks, per
 
 To run the complete test suite:
 
-```bash
-python manage.py test
-```
+    python manage.py test
 
 The current test suite contains **112 automated tests**.
 
 Expected result:
 
-```text
-Found 112 test(s).
-...
-Ran 112 tests
-OK
-```
+    Found 112 test(s).
+
+    ...
+
+    Ran 112 tests
+
+    OK
 
 ---
 
@@ -171,15 +168,11 @@ The project uses Coverage.py to measure test coverage.
 
 Run the tests with coverage:
 
-```bash
-coverage run manage.py test
-```
+    coverage run manage.py test
 
 Display the coverage report:
 
-```bash
-coverage report
-```
+    coverage report
 
 The project reaches approximately **99% overall test coverage**.
 
@@ -255,48 +248,47 @@ For the complete endpoint specification, refer to the KanMind API endpoint docum
 
 ## Project Structure
 
-```text
-KanMind/
-│
-├── auth_app/
-│   ├── api/
-│   │   ├── serializers.py
-│   │   ├── urls.py
-│   │   └── views.py
-│   ├── migrations/
-│   ├── tests/
-│   ├── admin.py
-│   └── models.py
-│
-├── board_app/
-│   ├── api/
-│   │   ├── serializers.py
-│   │   ├── urls.py
-│   │   └── views.py
-│   ├── migrations/
-│   ├── tests/
-│   ├── admin.py
-│   └── models.py
-│
-├── task_app/
-│   ├── api/
-│   │   ├── permissions.py
-│   │   ├── serializers.py
-│   │   ├── urls.py
-│   │   └── views.py
-│   ├── migrations/
-│   ├── tests/
-│   ├── admin.py
-│   └── models.py
-│
-├── core/
-│   ├── settings.py
-│   └── urls.py
-│
-├── manage.py
-├── requirements.txt
-└── README.md
-```
+    KanMind/
+
+    │
+    ├── auth_app/
+    │   ├── api/
+    │   │   ├── serializers.py
+    │   │   ├── urls.py
+    │   │   └── views.py
+    │   ├── migrations/
+    │   ├── tests/
+    │   ├── admin.py
+    │   └── models.py
+    │
+    ├── board_app/
+    │   ├── api/
+    │   │   ├── serializers.py
+    │   │   ├── urls.py
+    │   │   └── views.py
+    │   ├── migrations/
+    │   ├── tests/
+    │   ├── admin.py
+    │   └── models.py
+    │
+    ├── task_app/
+    │   ├── api/
+    │   │   ├── permissions.py
+    │   │   ├── serializers.py
+    │   │   ├── urls.py
+    │   │   └── views.py
+    │   ├── migrations/
+    │   ├── tests/
+    │   ├── admin.py
+    │   └── models.py
+    │
+    ├── core/
+    │   ├── settings.py
+    │   └── urls.py
+    │
+    ├── manage.py
+    ├── requirements.txt
+    └── README.md
 
 ---
 
@@ -305,6 +297,7 @@ KanMind/
 The KanMind frontend is maintained in a separate repository.
 
 **KanMind Frontend:**  
+
 https://github.com/Developer-Akademie-Backendkurs/project.KanMind
 
 The frontend communicates with this Django REST API.
@@ -317,41 +310,29 @@ When working on the project, make sure the virtual environment is activated befo
 
 **Windows:**
 
-```bash
-.venv\Scripts\activate
-```
+    .venv\Scripts\activate
 
 ### Useful commands
 
 Check the Django project:
 
-```bash
-python manage.py check
-```
+    python manage.py check
 
 Run the test suite:
 
-```bash
-python manage.py test
-```
+    python manage.py test
 
 Run tests with coverage:
 
-```bash
-coverage run manage.py test
-```
+    coverage run manage.py test
 
 Display the coverage report:
 
-```bash
-coverage report
-```
+    coverage report
 
 Start the development server:
 
-```bash
-python manage.py runserver
-```
+    python manage.py runserver
 
 ---
 
