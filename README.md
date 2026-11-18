@@ -248,7 +248,7 @@ Authentication is required for protected API endpoints.
 
 The public demo login endpoint is limited to 10 attempts per minute per client IP. Public registration is disabled: the registration route is not included in the API URL configuration. The production backend has login disabled through `KANMIND_LOGIN_DISABLED=True`; the demo backend accepts only the configured guest account through `KANMIND_GUEST_ONLY_LOGIN=True`. Each backend instance keeps its own throttle cache. DRF token authentication continues to use the project's existing non-expiring tokens.
 
-The API uses token-based authentication. After successful registration or login, the API returns an authentication token that can be used to access protected endpoints.
+The API uses token-based authentication. The public demo login returns an authentication token for the configured guest account, which is then used to access protected endpoints. Public account registration is not available.
 
 For the complete endpoint specification, refer to the KanMind API endpoint documentation provided by the Developer Akademie.
 
