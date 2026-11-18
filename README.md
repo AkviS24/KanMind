@@ -361,14 +361,17 @@ Do not commit the production `.env` file.
 
 ### 2. Prepare persistent directories
 
-Create the directories on the T-95 and grant access to the container user (UID/GID 10001):
+Create the directories on the T-95:
 
     sudo mkdir -p /srv/storage/webhosting/projects/KanMind/data
     sudo mkdir -p /srv/storage/webhosting/projects/KanMind/staticfiles
-    sudo chown -R 10001:10001 /srv/storage/webhosting/projects/KanMind/data
-    sudo chown -R 10001:10001 /srv/storage/webhosting/projects/KanMind/staticfiles
 
 If an existing SQLite database should be retained, back it up and copy it into the persistent `data` directory before the first container start. Do not overwrite an existing production database.
+
+After copying the database, grant the container user (UID/GID 10001) access to both directories:
+
+    sudo chown -R 10001:10001 /srv/storage/webhosting/projects/KanMind/data
+    sudo chown -R 10001:10001 /srv/storage/webhosting/projects/KanMind/staticfiles
 
 ### 3. Build and start the backend
 
