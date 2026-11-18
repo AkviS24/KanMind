@@ -1,6 +1,6 @@
 Python
 
-pycache/
+__pycache__/
 *.py[cod]
 *$py.class
 *.so
@@ -48,3 +48,8 @@ htmlcov/
 dist/
 build/
 *.egg-info/
+
+Deployment data
+
+data/
+staticfiles/
