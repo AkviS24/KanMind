@@ -101,6 +101,16 @@ INSTALLED_APPS = [
 
 AUTH_USER_MODEL = 'auth_app.User'
 
+CACHES = {
+    "default": {
+        "BACKEND": os.getenv(
+            "CACHE_BACKEND",
+            "django.core.cache.backends.locmem.LocMemCache",
+        ),
+        "LOCATION": os.getenv("CACHE_LOCATION", "kanmind"),
+    }
+}
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
