@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.throttling import ScopedRateThrottle
 
 from ..models import User
 from .serializers import (
@@ -18,6 +19,8 @@ class RegistrationView(APIView):
     """Handle user registration and token creation."""
 
     permission_classes = []
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'registration'
 
     def post(self, request):
         """Create a new user and return an authentication token."""
@@ -45,6 +48,8 @@ class LoginView(APIView):
     """Handle user authentication and token retrieval."""
 
     permission_classes = []
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'login'
 
     def post(self, request):
         """Authenticate a user and return an authentication token."""
