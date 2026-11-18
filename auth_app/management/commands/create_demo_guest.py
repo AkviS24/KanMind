@@ -12,14 +12,19 @@ def get_guest_credentials():
     email = os.getenv("KANMIND_GUEST_EMAIL")
     password = os.getenv("KANMIND_GUEST_PASSWORD")
     if not email or not password:
-        raise CommandError("Set KANMIND_GUEST_EMAIL and KANMIND_GUEST_PASSWORD.")
+        raise CommandError(
+            "Set KANMIND_GUEST_EMAIL and KANMIND_GUEST_PASSWORD."
+        )
     return email, password
 
 
 def create_guest_user(email, password):
     """Create or update the dedicated demo guest account."""
     fullname = os.getenv("KANMIND_GUEST_FULLNAME", "KanMind Guest")
-    user, _ = User.objects.get_or_create(email=email, defaults={"fullname": fullname})
+    user, _ = User.objects.get_or_create(
+        email=email,
+        defaults={"fullname": fullname},
+    )
     user.fullname = fullname
     user.is_active = True
     user.is_staff = False
@@ -42,9 +47,24 @@ def create_demo_board(user):
 def create_demo_tasks(board, user):
     """Create sample tasks without duplicating existing demo data."""
     samples = [
-        ("Plan the project", "Collect the first ideas and define the next steps.", "to-do", "high"),
-        ("Create the first task", "Try changing the status and priority.", "in-progress", "medium"),
-        ("Review the KanMind board", "Open this task and add a comment.", "review", "low"),
+        (
+            "Plan the project",
+            "Collect the first ideas and define the next steps.",
+            "to-do",
+            "high",
+        ),
+        (
+            "Create the first task",
+            "Try changing the status and priority.",
+            "in-progress",
+            "medium",
+        ),
+        (
+            "Review the KanMind board",
+            "Open this task and add a comment.",
+            "review",
+            "low",
+        ),
     ]
     for title, description, status, priority in samples:
         Task.objects.get_or_create(
