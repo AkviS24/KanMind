@@ -1,5 +1,7 @@
 services:
   kanmind-backend:
+    profiles:
+      - private
     build: .
     container_name: kanmind_backend
     env_file:
@@ -36,6 +38,8 @@ services:
       - no-new-privileges:true
 
   kanmind-demo-backend:
+    profiles:
+      - on-demand
     build: .
     container_name: kanmind_demo_backend
     env_file:
