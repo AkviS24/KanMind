@@ -411,11 +411,12 @@ public guest-login values in the frontend config. Keep these values in the
 server-side `.env` file; do not commit it.
 
 **Important:** Do not use generic `docker compose up -d` or
-`docker compose start` for normal operation. Those commands start all
-services in the Compose project and would bypass the intended on-demand
-startup. The future restricted start service must address only the fixed
-`kanmind-demo-backend` service. The container uses `restart: "no"`, so it
-does not start automatically after a server reboot.
+`docker compose start` for normal operation. They are not an authorization
+boundary. The future restricted start service must invoke only the explicit
+`--profile on-demand` target `kanmind-demo-backend`, and only after an
+approved grant. The Compose profile prevents the demo service from starting
+by default. The container uses `restart: "no"`, so it does not start
+automatically after a server reboot.
 
 For isolated manual testing only (not as the live access mechanism), the demo
 service can be started explicitly:
