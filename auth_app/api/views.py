@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.shortcuts import get_object_or_404
 
 from rest_framework import status
@@ -8,40 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.throttling import ScopedRateThrottle
 
 from ..models import User
-from .serializers import (
-    RegistrationSerializer,
-    LoginSerializer,
-    EmailCheckSerializer
-)
-
-
-class RegistrationView(APIView):
-    """Handle user registration and token creation."""
-
-    permission_classes = []
-    throttle_classes = [ScopedRateThrottle]
-    throttle_scope = 'registration'
-
-    def post(self, request):
-        """Create a new user and return an authentication token."""
-        serializer = RegistrationSerializer(data=request.data)
-
-        if serializer.is_valid():
-            user = serializer.save()
-            token = Token.objects.create(user=user)
-            return Response(
-                {
-                    'token': token.key,
-                    'fullname': user.fullname,
-                    'email': user.email,
-                    'user_id': user.id,
-                },
-                status=status.HTTP_201_CREATED,
-            )
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+from .serializers import LoginSerializer, EmailCheckSerializer
 
 
 class LoginView(APIView):
@@ -52,7 +20,28 @@ class LoginView(APIView):
     throttle_scope = 'login'
 
     def post(self, request):
-        """Authenticate a user and return an authentication token."""
+        """Authenticate the configured demo user and return a token."""
+        if settings.KANMIND_LOGIN_DISABLED:
+            return Response(
+                {"detail": "Login is disabled on this backend."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        submitted_email = (
+            request.data.get("email", "")
+            if hasattr(request.data, "get")
+            else ""
+        )
+        if (
+            settings.KANMIND_GUEST_ONLY_LOGIN
+            and submitted_email.strip().lower()
+            != settings.KANMIND_GUEST_EMAIL
+        ):
+            return Response(
+                {"detail": "Only the configured demo account is available."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         serializer = LoginSerializer(data=request.data)
 
         if serializer.is_valid():
