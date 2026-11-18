@@ -39,6 +39,9 @@ def get_env_list(name, default=None):
 
 # Security settings
 DEBUG = get_env_bool("DEBUG", True)
+KANMIND_LOGIN_DISABLED = get_env_bool("KANMIND_LOGIN_DISABLED")
+KANMIND_GUEST_ONLY_LOGIN = get_env_bool("KANMIND_GUEST_ONLY_LOGIN")
+KANMIND_GUEST_EMAIL = os.getenv("KANMIND_GUEST_EMAIL", "").strip().lower()
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 if not SECRET_KEY or SECRET_KEY.startswith("replace-"):
@@ -121,7 +124,6 @@ REST_FRAMEWORK = {
     'NUM_PROXIES': 1,
     'DEFAULT_THROTTLE_RATES': {
         'login': '10/minute',
-        'registration': '5/hour',
     },
 }
 
