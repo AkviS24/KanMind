@@ -436,7 +436,7 @@ Add the following locations inside the existing HTTPS `server` block. Do not rep
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-Nginx maps both public API prefixes to the same Django `/api/` routes, but to different backend containers and databases. Normal registration and login use `/kanmind-api/` and the production database. The guest login uses `/kanmind-demo-api/` and the isolated demo database. The demo database contains only the demo guest and its sample data; changes made by visitors cannot alter production users or data. The frontend stores the selected guest-session mode locally so subsequent board, task, and comment requests continue to use the demo backend until logout.
+Nginx maps both public API prefixes to the same Django `/api/` routes, but to different backend containers and databases. Normal registration and login use `/kanmind-api/` and the production database. The guest login uses `/kanmind-demo-api/` and the isolated demo database. The demo database contains only the demo guest and its sample data; changes made by visitors cannot alter production users or data. Demo changes persist across container restarts. Resetting the demo requires stopping the demo service and deliberately backing up or removing only its separate `demo-data` directory before starting it again. The frontend stores the selected guest-session mode locally so subsequent board, task, and comment requests continue to use the demo backend until logout.
 
 The `SECURE_SSL_REDIRECT` setting relies on Nginx forwarding the original protocol through `X-Forwarded-Proto`. HSTS remains disabled until HTTPS has been checked in production.
 
