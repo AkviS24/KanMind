@@ -248,7 +248,7 @@ The API is organized into the following main areas.
 
 Authentication is required for protected API endpoints.
 
-The public login and registration endpoints use scoped request limits (10 login attempts per minute and 5 registrations per hour per client IP). These limits apply independently to both the production and demo backend. DRF token authentication still uses the project's existing non-expiring tokens; token lifecycle changes are intentionally not introduced as part of this deployment preparation.
+The public login and registration endpoints use scoped request limits (10 login attempts per minute and 5 registrations per hour per client IP). These limits apply independently to both the production and demo backend. In production, each instance stores its throttle cache in its own SQLite database so the Gunicorn workers share limits without sharing demo and production cache data. DRF token authentication still uses the project's existing non-expiring tokens; token lifecycle changes are intentionally not introduced as part of this deployment preparation.
 
 The API uses token-based authentication. After successful registration or login, the API returns an authentication token that can be used to access protected endpoints.
 
