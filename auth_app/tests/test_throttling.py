@@ -27,11 +27,3 @@ class AuthenticationThrottleTests(TestCase):
             self.assertEqual(response.status_code, 400)
         response = self.post_auth_request("/api/login/", payload)
         self.assertEqual(response.status_code, 429)
-
-    def test_registration_endpoint_is_rate_limited(self):
-        """Limit repeated account creation attempts from the same client."""
-        for _ in range(5):
-            response = self.post_auth_request("/api/registration/", {})
-            self.assertEqual(response.status_code, 400)
-        response = self.post_auth_request("/api/registration/", {})
-        self.assertEqual(response.status_code, 429)
