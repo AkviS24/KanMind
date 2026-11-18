@@ -1,21 +1,8 @@
 from django.core.cache import cache
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from rest_framework.test import APIClient
 
 
-@override_settings(REST_FRAMEWORK={
-    "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.TokenAuthentication",
-    ],
-    "DEFAULT_THROTTLE_CLASSES": [
-        "rest_framework.throttling.ScopedRateThrottle",
-    ],
-    "NUM_PROXIES": 1,
-    "DEFAULT_THROTTLE_RATES": {
-        "login": "1/minute",
-        "registration": "1/minute",
-    },
-})
 class AuthenticationThrottleTests(TestCase):
     """Test rate limits on public authentication endpoints."""
 
@@ -23,38 +10,28 @@ class AuthenticationThrottleTests(TestCase):
         cache.clear()
         self.client = APIClient()
 
+    def post_auth_request(self, path, payload):
+        """Send an authentication request from a fixed client IP."""
+        return self.client.post(
+            path,
+            payload,
+            format="json",
+            HTTP_X_FORWARDED_FOR="203.0.113.10",
+        )
+
     def test_login_endpoint_is_rate_limited(self):
         """Limit repeated login attempts from the same client."""
         payload = {"email": "unknown@example.com", "password": "invalid"}
-        first = self.client.post(
-            "/api/login/",
-            payload,
-            format="json",
-            HTTP_X_FORWARDED_FOR="203.0.113.10",
-        )
-        second = self.client.post(
-            "/api/login/",
-            payload,
-            format="json",
-            HTTP_X_FORWARDED_FOR="203.0.113.10",
-        )
-        self.assertEqual(first.status_code, 400)
-        self.assertEqual(second.status_code, 429)
+        for _ in range(10):
+            response = self.post_auth_request("/api/login/", payload)
+            self.assertEqual(response.status_code, 400)
+        response = self.post_auth_request("/api/login/", payload)
+        self.assertEqual(response.status_code, 429)
 
     def test_registration_endpoint_is_rate_limited(self):
         """Limit repeated account creation attempts from the same client."""
-        payload = {}
-        first = self.client.post(
-            "/api/registration/",
-            payload,
-            format="json",
-            HTTP_X_FORWARDED_FOR="203.0.113.10",
-        )
-        second = self.client.post(
-            "/api/registration/",
-            payload,
-            format="json",
-            HTTP_X_FORWARDED_FOR="203.0.113.10",
-        )
-        self.assertEqual(first.status_code, 400)
-        self.assertEqual(second.status_code, 429)
+        for _ in range(5):
+            response = self.post_auth_request("/api/registration/", {})
+            self.assertEqual(response.status_code, 400)
+        response = self.post_auth_request("/api/registration/", {})
+        self.assertEqual(response.status_code, 429)
