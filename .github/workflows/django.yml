@@ -1,0 +1,62 @@
+name: Django checks
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      - hosted_version
+      - production-preparation
+  pull_request:
+    branches:
+      - hosted_version
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    env:
+      SECRET_KEY: ci-only-secret-key
+      DEBUG: "True"
+      ALLOWED_HOSTS: localhost,127.0.0.1
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Run Django system checks
+        run: python manage.py check
+
+      - name: Run production deployment checks
+        env:
+          SECRET_KEY: ci-only-secret-key-that-is-long-enough-for-the-production-check-2026
+          DEBUG: "False"
+          ALLOWED_HOSTS: kanmind.example.com
+          CSRF_TRUSTED_ORIGINS: https://kanmind.example.com
+          SECURE_SSL_REDIRECT: "True"
+          SECURE_HSTS_SECONDS: "3600"
+          SECURE_HSTS_INCLUDE_SUBDOMAINS: "True"
+          SECURE_HSTS_PRELOAD: "True"
+        run: python manage.py check --deploy
+
+      - name: Run automated tests
+        run: coverage run manage.py test
+
+      - name: Check test coverage
+        run: coverage report --fail-under=95
+
+      - name: Validate Docker setup
+        run: |
+          cp .env.example .env
+          docker compose config --quiet
+          docker build --tag kanmind-backend:test .

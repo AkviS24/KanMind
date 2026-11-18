@@ -1,0 +1,14 @@
+.git
+.github
+.venv
+venv
+__pycache__
+*.py[cod]
+*.sqlite3
+*.sqlite3-journal
+.env
+.env.*
+.coverage
+htmlcov
+data
+staticfiles

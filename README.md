@@ -23,9 +23,10 @@ https://github.com/AkviS24/KanMind
 The backend is built with:
 
 - Python 3
-- Django 6.1
+- Django 6.1.3
 - Django REST Framework 3.18.0
 - Django REST Framework Token Authentication
+- Gunicorn
 - SQLite
 - Coverage.py
 - pycodestyle
@@ -91,11 +92,18 @@ The project dependencies are listed in `requirements.txt`.
 
 Create a `.env` file in the root directory of the backend project, at the same level as `manage.py`.
 
-Add the Django secret key to the `.env` file:
+For local development, configure the required variables:
 
-    SECRET_KEY=your-secret-key-here
+    SECRET_KEY=your-local-development-secret
+    DEBUG=True
+    ALLOWED_HOSTS=127.0.0.1,localhost
+    CORS_ALLOWED_ORIGINS=http://127.0.0.1:5500,http://localhost:5500
 
-The `.env` file is included in `.gitignore` and must not be committed to the repository.
+For production, copy `.env.example` to `.env` and replace the example secret with a newly generated key:
+
+    python -c "import secrets; print(secrets.token_urlsafe(64))"
+
+The `.env` file is included in `.gitignore` and must not be committed to the repository. Never use the example secret in a live deployment.
 
 ---
 
@@ -240,6 +248,8 @@ The API is organized into the following main areas.
 
 Authentication is required for protected API endpoints.
 
+The public login and registration endpoints use scoped request limits (10 login attempts per minute and 5 registrations per hour per client IP). These limits apply independently to both the production and demo backend. In production, each instance stores its throttle cache in its own SQLite database so the Gunicorn workers share limits without sharing demo and production cache data. DRF token authentication still uses the project's existing non-expiring tokens; token lifecycle changes are intentionally not introduced as part of this deployment preparation.
+
 The API uses token-based authentication. After successful registration or login, the API returns an authentication token that can be used to access protected endpoints.
 
 For the complete endpoint specification, refer to the KanMind API endpoint documentation provided by the Developer Akademie.
@@ -333,6 +343,110 @@ Display the coverage report:
 Start the development server:
 
     python manage.py runserver
+
+---
+
+## Production Deployment (T-95)
+
+The production setup uses Docker Compose, Gunicorn, and SQLite. The database and collected static files are stored in persistent directories on the Toshiba storage.
+
+### 1. Prepare the environment
+
+Copy `.env.example` to `.env` and generate a unique `SECRET_KEY`. Keep `DEBUG=False` and configure the production domains in `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS`. Verify that HTTPS is already working before starting the service because the production configuration forces `SECURE_SSL_REDIRECT=True`.
+
+The example paths point to:
+
+- Database: `/srv/storage/webhosting/projects/KanMind/data`
+- Static files: `/srv/storage/webhosting/projects/KanMind/staticfiles`
+- Demo database: `/srv/storage/webhosting/projects/KanMind/demo-data`
+- Demo static files: `/srv/storage/webhosting/projects/KanMind/demo-staticfiles`
+
+Do not commit the production `.env` file.
+
+### 2. Prepare persistent directories
+
+Create the directories on the T-95:
+
+    sudo mkdir -p /srv/storage/webhosting/projects/KanMind/data
+    sudo mkdir -p /srv/storage/webhosting/projects/KanMind/staticfiles
+    sudo mkdir -p /srv/storage/webhosting/projects/KanMind/demo-data
+    sudo mkdir -p /srv/storage/webhosting/projects/KanMind/demo-staticfiles
+
+If an existing SQLite database should be retained, back it up and copy it into the persistent `data` directory before the first container start. Do not overwrite an existing production database.
+
+After copying the database, grant the container user (UID/GID 10001) access to both directories:
+
+    sudo chown -R 10001:10001 /srv/storage/webhosting/projects/KanMind/data
+    sudo chown -R 10001:10001 /srv/storage/webhosting/projects/KanMind/staticfiles
+    sudo chown -R 10001:10001 /srv/storage/webhosting/projects/KanMind/demo-data
+    sudo chown -R 10001:10001 /srv/storage/webhosting/projects/KanMind/demo-staticfiles
+
+### 3. Build and start the backend
+
+Run these commands from the backend repository directory:
+
+    docker compose up --build -d
+    docker compose logs -f kanmind-backend
+
+The production container applies migrations and collects static files before starting Gunicorn. It listens only on `127.0.0.1:8002`. The separate demo container listens only on `127.0.0.1:8003` and uses its own database and static directory. On first start it creates the configured guest account and three sample tasks in the demo database. The guest account is never created in the production database.
+
+Set `KANMIND_DEMO_SECRET_KEY` to a second generated secret. Set `KANMIND_GUEST_EMAIL` and `KANMIND_GUEST_PASSWORD` to exactly the existing public guest-login values in the frontend config. Keep these values in the server-side `.env` file; do not commit it.
+
+The service uses `restart: "no"` and therefore does not start automatically after a server reboot. Start it when the KanMind demo is needed:
+
+    docker compose start
+
+Stop it when it is no longer needed:
+
+    docker compose stop
+
+The database and static files remain in the host directories when the container is stopped or removed.
+
+### 4. Configure Nginx
+
+Add the following locations inside the existing HTTPS `server` block. Do not replace the existing Portfolio configuration:
+
+    location ^~ /kanmind-api/static/ {
+        alias /srv/storage/webhosting/projects/KanMind/staticfiles/;
+        access_log off;
+        expires 1h;
+    }
+
+    location /kanmind-api/ {
+        proxy_pass http://127.0.0.1:8002/api/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location ^~ /kanmind-demo-api/static/ {
+        alias /srv/storage/webhosting/projects/KanMind/demo-staticfiles/;
+        access_log off;
+        expires 1h;
+    }
+
+    location /kanmind-demo-api/ {
+        proxy_pass http://127.0.0.1:8003/api/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+Nginx maps both public API prefixes to the same Django `/api/` routes, but to different backend containers and databases. Normal registration and login use `/kanmind-api/` and the production database. The guest login uses `/kanmind-demo-api/` and the isolated demo database. The demo database contains only the demo guest and its sample data; changes made by visitors cannot alter production users or data. Demo changes persist across container restarts. Resetting the demo requires stopping the demo service and deliberately backing up or removing only its separate `demo-data` directory before starting it again. The frontend stores the selected guest-session mode locally so subsequent board, task, and comment requests continue to use the demo backend until logout.
+
+The `SECURE_SSL_REDIRECT` setting relies on Nginx forwarding the original protocol through `X-Forwarded-Proto`. HSTS remains disabled until HTTPS has been checked in production.
+
+### 5. Run the production configuration check
+
+After the environment and Nginx configuration are in place, run:
+
+    docker compose run --rm --entrypoint python kanmind-backend manage.py check --deploy
+
+Review all warnings before making the service publicly available. The HSTS warning is expected while `SECURE_HSTS_SECONDS=0`; enable HSTS only after HTTPS has been verified.
 
 ---
 
