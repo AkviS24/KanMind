@@ -6,6 +6,7 @@ services:
       - .env
     environment:
       DEBUG: "False"
+      KANMIND_LOGIN_DISABLED: "True"
       DATABASE_PATH: /data/db.sqlite3
       STATIC_ROOT: /app/staticfiles
       STATIC_URL: /kanmind-api/static/
@@ -41,6 +42,7 @@ services:
       - .env
     environment:
       DEBUG: "False"
+      KANMIND_GUEST_ONLY_LOGIN: "True"
       SECRET_KEY: ${KANMIND_DEMO_SECRET_KEY:?Set KANMIND_DEMO_SECRET_KEY in .env}
       DATABASE_PATH: /demo-data/db.sqlite3
       STATIC_ROOT: /app/staticfiles
