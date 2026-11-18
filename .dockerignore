@@ -12,3 +12,5 @@ __pycache__
 htmlcov
 data
 staticfiles
+demo-data
+demo-staticfiles

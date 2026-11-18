@@ -53,3 +53,5 @@ Deployment data
 
 data/
 staticfiles/
+demo-data/
+demo-staticfiles/

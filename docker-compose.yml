@@ -33,6 +33,11 @@ services:
       - /tmp
     security_opt:
       - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   kanmind-demo-backend:
     build: .
@@ -73,3 +78,8 @@ services:
       - /tmp
     security_opt:
       - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
