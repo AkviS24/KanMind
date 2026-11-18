@@ -383,7 +383,7 @@ After copying the database, grant the container user (UID/GID 10001) access to b
 
 Run these commands from the backend repository directory:
 
-    docker compose build
+    docker compose --profile on-demand build kanmind-demo-backend
     docker compose config --quiet
 
 Building the images does not start either service. The public demo backend is
@@ -419,13 +419,13 @@ does not start automatically after a server reboot.
 For isolated manual testing only (not as the live access mechanism), the demo
 service can be started explicitly:
 
-    docker compose up -d kanmind-demo-backend
-    docker compose ps
-    docker compose logs -f kanmind-demo-backend
+    docker compose --profile on-demand up -d kanmind-demo-backend
+    docker compose --profile on-demand ps
+    docker compose --profile on-demand logs -f kanmind-demo-backend
 
 Stop that service after the manual test:
 
-    docker compose stop kanmind-demo-backend
+    docker compose --profile on-demand stop kanmind-demo-backend
 
 The database and static files remain in the host directories when the
 container is stopped or removed. Demo changes persist across container
