@@ -23,9 +23,10 @@ https://github.com/AkviS24/KanMind
 The backend is built with:
 
 - Python 3
-- Django 6.1
+- Django 6.1.3
 - Django REST Framework 3.18.0
 - Django REST Framework Token Authentication
+- Gunicorn
 - SQLite
 - Coverage.py
 - pycodestyle
@@ -349,7 +350,7 @@ The production setup uses Docker Compose, Gunicorn, and SQLite. The database and
 
 ### 1. Prepare the environment
 
-Copy `.env.example` to `.env` and generate a unique `SECRET_KEY`. Keep `DEBUG=False` and configure the production domains in `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS`.
+Copy `.env.example` to `.env` and generate a unique `SECRET_KEY`. Keep `DEBUG=False` and configure the production domains in `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS`. Verify that HTTPS is already working before starting the service because the production configuration forces `SECURE_SSL_REDIRECT=True`.
 
 The example paths point to:
 
