@@ -38,7 +38,7 @@ def get_env_list(name, default=None):
 
 
 # Security settings
-DEBUG = get_env_bool("DEBUG", True)
+DEBUG = get_env_bool("DEBUG", False)
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 if not SECRET_KEY or SECRET_KEY.startswith("replace-"):
