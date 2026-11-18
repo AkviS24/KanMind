@@ -5,8 +5,6 @@ from django.test import TestCase, override_settings
 
 from rest_framework import status
 
-from core.health import health_check
-
 
 @override_settings(SECURE_SSL_REDIRECT=False)
 class HealthCheckTests(TestCase):
