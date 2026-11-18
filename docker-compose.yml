@@ -1,0 +1,31 @@
+services:
+  kanmind-backend:
+    build: .
+    container_name: kanmind_backend
+    env_file:
+      - .env
+    environment:
+      DEBUG: "False"
+      DATABASE_PATH: /data/db.sqlite3
+      STATIC_ROOT: /app/staticfiles
+      STATIC_URL: /kanmind-api/static/
+      SECURE_SSL_REDIRECT: "True"
+    volumes:
+      - ${KANMIND_DATA_DIR:-./data}:/data
+      - ${KANMIND_STATIC_DIR:-./staticfiles}:/app/staticfiles
+    ports:
+      - "127.0.0.1:8002:8000"
+    command:
+      - sh
+      - -c
+      - |
+        python manage.py migrate --noinput
+        python manage.py collectstatic --noinput
+        exec gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 60
+    restart: "no"
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
