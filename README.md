@@ -156,15 +156,15 @@ To run the complete test suite:
 
     python manage.py test
 
-The current test suite contains **112 automated tests**.
+The current test suite contains **117 automated tests**.
 
 Expected result:
 
-    Found 112 test(s).
+    Found 117 test(s).
 
     ...
 
-    Ran 112 tests
+    Ran 117 tests
 
     OK
 
