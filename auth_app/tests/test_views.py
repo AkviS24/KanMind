@@ -8,6 +8,9 @@ from auth_app.models import User
 class RegistrationEndpointDisabledTest(TestCase):
     """Ensure public account creation is no longer exposed."""
 
+    def setUp(self):
+        self.client = APIClient()
+
     def test_registration_endpoint_returns_not_found(self):
         response = self.client.post(
             "/api/registration/",
