@@ -48,3 +48,9 @@ jobs:
 
       - name: Run automated tests
         run: python manage.py test
+
+      - name: Validate Docker setup
+        run: |
+          cp .env.example .env
+          docker compose config --quiet
+          docker build --tag kanmind-backend:test .
