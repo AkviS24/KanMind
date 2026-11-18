@@ -391,11 +391,12 @@ Building the images does not start either service. The public demo backend is
 has verified the Portfolio session and the user's KanMind permission.
 
 The production backend (`kanmind-backend`, port `127.0.0.1:8002`) is not part
-of the public demo flow and has no public Nginx route. Do not start it as part
-of the demo launch.
+of the public demo flow and has no public Nginx route. It uses the `private`
+Compose profile and is not started by default. Do not start it as part of the
+demo launch.
 
-The demo backend listens only on `127.0.0.1:8003`. It uses its own database
-and static directory. On first start it applies migrations, creates the
+The demo backend listens only on `127.0.0.1:8003` and uses the `on-demand`
+Compose profile. It uses its own database and static directory. On first start it applies migrations, creates the
 configured guest account and three sample tasks, and collects static files.
 The guest account is never created in the production database.
 
