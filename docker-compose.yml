@@ -30,3 +30,40 @@ services:
       - /tmp
     security_opt:
       - no-new-privileges:true
+
+  kanmind-demo-backend:
+    build: .
+    container_name: kanmind_demo_backend
+    env_file:
+      - .env
+    environment:
+      DEBUG: "False"
+      SECRET_KEY: ${KANMIND_DEMO_SECRET_KEY:?Set KANMIND_DEMO_SECRET_KEY in .env}
+      DATABASE_PATH: /demo-data/db.sqlite3
+      STATIC_ROOT: /app/staticfiles
+      STATIC_URL: /kanmind-demo-api/static/
+      SECURE_SSL_REDIRECT: "True"
+      KANMIND_GUEST_EMAIL: ${KANMIND_GUEST_EMAIL:?Set KANMIND_GUEST_EMAIL in .env}
+      KANMIND_GUEST_PASSWORD: ${KANMIND_GUEST_PASSWORD:?Set KANMIND_GUEST_PASSWORD in .env}
+      KANMIND_GUEST_FULLNAME: ${KANMIND_GUEST_FULLNAME:-KanMind Guest}
+    volumes:
+      - ${KANMIND_DEMO_DATA_DIR:-./demo-data}:/demo-data
+      - ${KANMIND_DEMO_STATIC_DIR:-./demo-staticfiles}:/app/staticfiles
+    ports:
+      - "127.0.0.1:8003:8000"
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        python manage.py migrate --noinput
+        python manage.py create_demo_guest
+        python manage.py collectstatic --noinput
+        exec gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 60
+    restart: "no"
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
