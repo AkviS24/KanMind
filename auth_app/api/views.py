@@ -28,7 +28,7 @@ class LoginView(APIView):
             )
 
         submitted_email = (
-            request.data.get("email", "")
+            str(request.data.get("email", ""))
             if hasattr(request.data, "get")
             else ""
         )
