@@ -379,49 +379,82 @@ After copying the database, grant the container user (UID/GID 10001) access to b
     sudo chown -R 10001:10001 /srv/storage/webhosting/projects/KanMind/demo-data
     sudo chown -R 10001:10001 /srv/storage/webhosting/projects/KanMind/demo-staticfiles
 
-### 3. Build and start the backend
+### 3. Build images without starting containers
 
 Run these commands from the backend repository directory:
 
-    docker compose up --build -d
-    docker compose logs -f kanmind-backend
+    docker compose build
+    docker compose config --quiet
 
-The production container applies migrations and collects static files before starting Gunicorn. It listens only on `127.0.0.1:8002`. The separate demo container listens only on `127.0.0.1:8003` and uses its own database and static directory. On first start it creates the configured guest account and three sample tasks in the demo database. The guest account is never created in the production database.
+Building the images does not start either service. The public demo backend is
+`kanmind-demo-backend`; it must remain stopped until the Permission Handler
+has verified the Portfolio session and the user's KanMind permission.
 
-Set `KANMIND_DEMO_SECRET_KEY` to a second generated secret. Set `KANMIND_GUEST_EMAIL` and `KANMIND_GUEST_PASSWORD` to exactly the existing public guest-login values in the frontend config. Keep these values in the server-side `.env` file; do not commit it.
+The production backend (`kanmind-backend`, port `127.0.0.1:8002`) is not part
+of the public demo flow and has no public Nginx route. Do not start it as part
+of the demo launch.
 
-The service uses `restart: "no"` and therefore does not start automatically after a server reboot. Start it when the KanMind demo is needed:
+The demo backend listens only on `127.0.0.1:8003`. It uses its own database
+and static directory. On first start it applies migrations, creates the
+configured guest account and three sample tasks, and collects static files.
+The guest account is never created in the production database.
 
-    docker compose start
+The demo service has a Docker health check. It reports healthy only after
+Gunicorn responds and the demo database accepts a query. The health check uses
+the private `/internal/health/` route, which is not part of the public API
+proxy configuration.
 
-Stop it when it is no longer needed:
+Set `KANMIND_DEMO_SECRET_KEY` to a second generated secret. Set
+`KANMIND_GUEST_EMAIL` and `KANMIND_GUEST_PASSWORD` to exactly the existing
+public guest-login values in the frontend config. Keep these values in the
+server-side `.env` file; do not commit it.
 
-    docker compose stop
+**Important:** Do not use generic `docker compose up -d` or
+`docker compose start` for normal operation. Those commands start all
+services in the Compose project and would bypass the intended on-demand
+startup. The future restricted start service must address only the fixed
+`kanmind-demo-backend` service. The container uses `restart: "no"`, so it
+does not start automatically after a server reboot.
 
-The database and static files remain in the host directories when the container is stopped or removed.
+For isolated manual testing only (not as the live access mechanism), the demo
+service can be started explicitly:
+
+    docker compose up -d kanmind-demo-backend
+    docker compose ps
+    docker compose logs -f kanmind-demo-backend
+
+Stop that service after the manual test:
+
+    docker compose stop kanmind-demo-backend
+
+The database and static files remain in the host directories when the
+container is stopped or removed. Demo changes persist across container
+restarts. Resetting the demo requires stopping only the demo service and
+deliberately backing up or removing only its separate `demo-data` directory
+before starting it again.
 
 ### 4. Configure Nginx
 
-Add the following locations inside the existing HTTPS `server` block. Do not replace the existing Portfolio configuration:
+**Do not expose KanMind through Nginx yet.** The Permission Handler and its
+proxy authorization are not deployed and tested. A plain reverse-proxy route
+to `127.0.0.1:8003` would make the demo API directly callable and would
+violate the required Portfolio-only entry flow.
 
-    location ^~ /kanmind-demo-api/static/ {
-        alias /srv/storage/webhosting/projects/KanMind/demo-staticfiles/;
-        access_log off;
-        expires 1h;
-    }
+Before enabling public access, the final Nginx configuration must:
 
-    location /kanmind-demo-api/ {
-        proxy_pass http://127.0.0.1:8003/api/;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
+- Protect the KanMind SPA entry `/kanmind/` with the Permission Handler.
+- Protect the complete demo API prefix `/kanmind-demo-api/` with the same
+  server-side authorization check.
+- Apply authorization to static/API sublocations as required; no protected
+  route may be reachable by bypassing the check.
+- Keep the demo backend bound to `127.0.0.1:8003`.
+- Never publish the production API prefix `/kanmind-api/`.
+- Route only to fixed, preconfigured upstreams after a valid grant.
 
-Only the demo API prefix `/kanmind-demo-api/` is exposed publicly and routed to the isolated demo database. Do not publish a `/kanmind-api/` reverse-proxy location. The production backend remains bound to localhost and its login endpoint is disabled. The demo database is separate from production data, and the demo login accepts only the configured guest account. Changes made by visitors cannot alter production users or data. Demo changes persist across container restarts. Resetting the demo requires stopping the demo service and deliberately backing up or removing only its separate `demo-data` directory before starting it again. The frontend sends all application API requests to the demo backend.
-
-The `SECURE_SSL_REDIRECT` setting relies on Nginx forwarding the original protocol through `X-Forwarded-Proto`. HSTS remains disabled until HTTPS has been checked in production.
+The exact `auth_request` location and Handler upstream must be added only
+after the Permission Handler's internal deployment interface is finalized
+and tested. Do not copy an unprotected `proxy_pass` example into the live
+Nginx configuration.
 
 ### 5. Run the production configuration check
 
