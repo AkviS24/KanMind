@@ -1,98 +1,28 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 from rest_framework.authtoken.models import Token
 
 from auth_app.models import User
 
 
-class RegistrationViewTest(TestCase):
+class RegistrationEndpointDisabledTest(TestCase):
+    """Ensure public account creation is no longer exposed."""
 
-    def setUp(self):
-        self.client=APIClient()
-
-    def test_registration_success(self):
-        data={
-            'fullname': 'View Test User',
-            'email': 'view@test.com',
-            'password': 'password123',
-            'repeated_password': 'password123',
-        }
-
-        response=self.client.post(
-            '/api/registration/',
-            data,
-            format='json',
-        )
-
-        self.assertEqual(
-            response.status_code,
-            201,
-        )
-        self.assertEqual(
-            response.data['email'],
-            'view@test.com',
-        )
-        self.assertEqual(
-            response.data['fullname'],
-            'View Test User',
-        )
-        self.assertIn(
-            'token',
-            response.data,
-        )
-        self.assertTrue(
-            Token.objects.filter(
-                user__email='view@test.com',
-            ).exists()
-        )
-        self.assertTrue(
-            User.objects.filter(
-                email='view@test.com',
-            ).exists()
-        )
-
-
-    def test_registration_password_mismatch(self):
-        data={
-            'fullname': 'View Test User',
-            'email': 'mismatch@test.com',
-            'password': 'password123',
-            'repeated_password': 'different123',
-        }
-
-        response=self.client.post(
-            '/api/registration/',
-            data,
-            format='json',
-        )
-
-        self.assertEqual(
-            response.status_code,
-            400,
-        )
-        self.assertIn(
-            'password',
-            response.data,
-        )
-
-    def test_registration_invalid_data(self):
-        data = {
-            'fullname': '',
-            'email': 'invalid-registration@test.com',
-            'password': 'password123',
-            'repeated_password': 'password123',
-        }
-
+    def test_registration_endpoint_returns_not_found(self):
         response = self.client.post(
-            '/api/registration/',
-            data,
-            format='json',
+            "/api/registration/",
+            {
+                "fullname": "Unexpected User",
+                "email": "unexpected@test.com",
+                "password": "password123",
+                "repeated_password": "password123",
+            },
+            format="json",
         )
 
-        self.assertEqual(
-            response.status_code,
-            400,
-        )
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(User.objects.filter(email="unexpected@test.com").exists())
+
 
 class LoginViewTest(TestCase):
 
@@ -183,6 +113,61 @@ class LoginViewTest(TestCase):
             'token',
             response.data,
         )
+
+
+class LoginPolicyTest(TestCase):
+    """Test the production and demo authentication restrictions."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.demo_user = User.objects.create_user(
+            email="demo-policy@test.com",
+            password="password123",
+            fullname="Demo Policy User",
+        )
+        self.other_user = User.objects.create_user(
+            email="other-policy@test.com",
+            password="password123",
+            fullname="Other Policy User",
+        )
+
+    @override_settings(KANMIND_LOGIN_DISABLED=True)
+    def test_login_is_disabled_on_production_backend(self):
+        response = self.client.post(
+            "/api/login/",
+            {"email": self.demo_user.email, "password": "password123"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+    @override_settings(
+        KANMIND_GUEST_ONLY_LOGIN=True,
+        KANMIND_GUEST_EMAIL="demo-policy@test.com",
+    )
+    def test_demo_backend_rejects_non_demo_accounts(self):
+        response = self.client.post(
+            "/api/login/",
+            {"email": self.other_user.email, "password": "password123"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+    @override_settings(
+        KANMIND_GUEST_ONLY_LOGIN=True,
+        KANMIND_GUEST_EMAIL="demo-policy@test.com",
+    )
+    def test_demo_backend_accepts_configured_demo_account(self):
+        response = self.client.post(
+            "/api/login/",
+            {"email": self.demo_user.email, "password": "password123"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["email"], self.demo_user.email)
+
 
 class EmailCheckViewTest(TestCase):
 
