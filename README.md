@@ -37,8 +37,7 @@ The backend is built with:
 
 ### Authentication
 
-- User registration
-- User login
+- Demo account login (public registration disabled)
 - Token-based authentication
 - Email address lookup
 
@@ -150,7 +149,7 @@ The development server will normally be available at:
 
 ## Running Tests
 
-The project contains automated tests covering authentication, boards, tasks, permissions, serializers, and models.
+The project contains automated tests covering authentication, boards, tasks, permissions, serializers, and models. The authentication tests also verify that public registration is unavailable and that the production/demo login restrictions are enforced.
 
 To run the complete test suite:
 
@@ -213,7 +212,6 @@ The API is organized into the following main areas.
 
 | Method | Endpoint | Description |
 |---|---|---|
-| POST | `/api/registration/` | Register a new user |
 | POST | `/api/login/` | Authenticate a user |
 | GET | `/api/email-check/` | Check whether an email address belongs to an existing user |
 
@@ -248,7 +246,7 @@ The API is organized into the following main areas.
 
 Authentication is required for protected API endpoints.
 
-The public login and registration endpoints use scoped request limits (10 login attempts per minute and 5 registrations per hour per client IP). These limits apply independently to both the production and demo backend. In production, each instance stores its throttle cache in its own SQLite database so the Gunicorn workers share limits without sharing demo and production cache data. DRF token authentication still uses the project's existing non-expiring tokens; token lifecycle changes are intentionally not introduced as part of this deployment preparation.
+The public demo login endpoint is limited to 10 attempts per minute per client IP. Public registration is disabled: the registration route is not included in the API URL configuration. The production backend has login disabled through `KANMIND_LOGIN_DISABLED=True`; the demo backend accepts only the configured guest account through `KANMIND_GUEST_ONLY_LOGIN=True`. Each backend instance keeps its own throttle cache. DRF token authentication continues to use the project's existing non-expiring tokens.
 
 The API uses token-based authentication. After successful registration or login, the API returns an authentication token that can be used to access protected endpoints.
 
@@ -406,21 +404,6 @@ The database and static files remain in the host directories when the container 
 
 Add the following locations inside the existing HTTPS `server` block. Do not replace the existing Portfolio configuration:
 
-    location ^~ /kanmind-api/static/ {
-        alias /srv/storage/webhosting/projects/KanMind/staticfiles/;
-        access_log off;
-        expires 1h;
-    }
-
-    location /kanmind-api/ {
-        proxy_pass http://127.0.0.1:8002/api/;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
     location ^~ /kanmind-demo-api/static/ {
         alias /srv/storage/webhosting/projects/KanMind/demo-staticfiles/;
         access_log off;
@@ -436,7 +419,7 @@ Add the following locations inside the existing HTTPS `server` block. Do not rep
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-Nginx maps both public API prefixes to the same Django `/api/` routes, but to different backend containers and databases. Normal registration and login use `/kanmind-api/` and the production database. The guest login uses `/kanmind-demo-api/` and the isolated demo database. The demo database contains only the demo guest and its sample data; changes made by visitors cannot alter production users or data. Demo changes persist across container restarts. Resetting the demo requires stopping the demo service and deliberately backing up or removing only its separate `demo-data` directory before starting it again. The frontend stores the selected guest-session mode locally so subsequent board, task, and comment requests continue to use the demo backend until logout.
+Only the demo API prefix `/kanmind-demo-api/` is exposed publicly and routed to the isolated demo database. Do not publish a `/kanmind-api/` reverse-proxy location. The production backend remains bound to localhost and its login endpoint is disabled. The demo database is separate from production data, and the demo login accepts only the configured guest account. Changes made by visitors cannot alter production users or data. Demo changes persist across container restarts. Resetting the demo requires stopping the demo service and deliberately backing up or removing only its separate `demo-data` directory before starting it again. The frontend sends all application API requests to the demo backend.
 
 The `SECURE_SSL_REDIRECT` setting relies on Nginx forwarding the original protocol through `X-Forwarded-Proto`. HSTS remains disabled until HTTPS has been checked in production.
 
