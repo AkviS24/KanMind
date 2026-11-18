@@ -356,6 +356,8 @@ The example paths point to:
 
 - Database: `/srv/storage/webhosting/projects/KanMind/data`
 - Static files: `/srv/storage/webhosting/projects/KanMind/staticfiles`
+- Demo database: `/srv/storage/webhosting/projects/KanMind/demo-data`
+- Demo static files: `/srv/storage/webhosting/projects/KanMind/demo-staticfiles`
 
 Do not commit the production `.env` file.
 
@@ -365,6 +367,8 @@ Create the directories on the T-95:
 
     sudo mkdir -p /srv/storage/webhosting/projects/KanMind/data
     sudo mkdir -p /srv/storage/webhosting/projects/KanMind/staticfiles
+    sudo mkdir -p /srv/storage/webhosting/projects/KanMind/demo-data
+    sudo mkdir -p /srv/storage/webhosting/projects/KanMind/demo-staticfiles
 
 If an existing SQLite database should be retained, back it up and copy it into the persistent `data` directory before the first container start. Do not overwrite an existing production database.
 
@@ -372,6 +376,8 @@ After copying the database, grant the container user (UID/GID 10001) access to b
 
     sudo chown -R 10001:10001 /srv/storage/webhosting/projects/KanMind/data
     sudo chown -R 10001:10001 /srv/storage/webhosting/projects/KanMind/staticfiles
+    sudo chown -R 10001:10001 /srv/storage/webhosting/projects/KanMind/demo-data
+    sudo chown -R 10001:10001 /srv/storage/webhosting/projects/KanMind/demo-staticfiles
 
 ### 3. Build and start the backend
 
@@ -380,7 +386,9 @@ Run these commands from the backend repository directory:
     docker compose up --build -d
     docker compose logs -f kanmind-backend
 
-The container applies database migrations and collects static files before starting Gunicorn. It listens only on `127.0.0.1:8002`, so it is not directly exposed to the internet.
+The production container applies migrations and collects static files before starting Gunicorn. It listens only on `127.0.0.1:8002`. The separate demo container listens only on `127.0.0.1:8003` and uses its own database and static directory. On first start it creates the configured guest account and three sample tasks in the demo database. The guest account is never created in the production database.
+
+Set `KANMIND_DEMO_SECRET_KEY` to a second generated secret. Set `KANMIND_GUEST_EMAIL` and `KANMIND_GUEST_PASSWORD` to exactly the existing public guest-login values in the frontend config. Keep these values in the server-side `.env` file; do not commit it.
 
 The service uses `restart: "no"` and therefore does not start automatically after a server reboot. Start it when the KanMind demo is needed:
 
@@ -411,7 +419,22 @@ Add the following locations inside the existing HTTPS `server` block. Do not rep
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-Nginx maps the public `/kanmind-api/` path to Django's existing internal `/api/` routes. The KanMind frontend must use `https://ak-coding.de/kanmind-api/` as its API base URL.
+    location ^~ /kanmind-demo-api/static/ {
+        alias /srv/storage/webhosting/projects/KanMind/demo-staticfiles/;
+        access_log off;
+        expires 1h;
+    }
+
+    location /kanmind-demo-api/ {
+        proxy_pass http://127.0.0.1:8003/api/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+Nginx maps both public API prefixes to the same Django `/api/` routes, but to different backend containers and databases. Normal registration and login use `/kanmind-api/` and the production database. The guest login uses `/kanmind-demo-api/` and the isolated demo database. The demo database contains only the demo guest and its sample data; changes made by visitors cannot alter production users or data. The frontend stores the selected guest-session mode locally so subsequent board, task, and comment requests continue to use the demo backend until logout.
 
 The `SECURE_SSL_REDIRECT` setting relies on Nginx forwarding the original protocol through `X-Forwarded-Proto`. HSTS remains disabled until HTTPS has been checked in production.
 
