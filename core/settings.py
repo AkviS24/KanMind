@@ -41,10 +41,10 @@ def get_env_list(name, default=None):
 DEBUG = get_env_bool("DEBUG", True)
 SECRET_KEY = os.getenv("SECRET_KEY")
 
-if not SECRET_KEY:
+if not SECRET_KEY or SECRET_KEY.startswith("replace-"):
     if not DEBUG:
         raise ImproperlyConfigured(
-            "SECRET_KEY must be set when DEBUG is disabled."
+            "Set a generated SECRET_KEY before running in production."
         )
     SECRET_KEY = "django-insecure-local-development-only"
 
